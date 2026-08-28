@@ -10,6 +10,7 @@ import {
   Clock3,
   Database,
   Filter,
+  FileUp,
   LoaderCircle,
   Moon,
   Radio,
@@ -27,14 +28,17 @@ import {
   fetchGenerationJob,
   fetchHandoff,
   getErrorMessage,
+  importShiftData,
 } from "../api/client";
 import type {
   BoardData,
   GenerationJob,
   HandoffDetail,
+  ImportSourceMode,
   PatientCard as PatientCardType,
 } from "../types";
-import { formatBusinessDate } from "../presentation";
+import { formatBusinessDate, formatDateTime } from "../presentation";
+import { DataImportDialog } from "./data-import-dialog";
 import { HandoffDrawer } from "./handoff-drawer";
 import { PatientCard } from "./patient-card";
 import styles from "./handoff-workspace.module.css";
@@ -65,6 +69,8 @@ export function HandoffWorkspace({
   );
   const [detail, setDetail] = useState<HandoffDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(Boolean(initialHandoffId));
+  const [showImport, setShowImport] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const refreshBoard = useCallback(async () => {
@@ -190,6 +196,27 @@ export function HandoffWorkspace({
     }
   }
 
+  async function handleImport(input: {
+    sourceMode: ImportSourceMode;
+    fileName?: string | null;
+  }) {
+    setImportLoading(true);
+    setNotice(null);
+    try {
+      const imported = await importShiftData(board.shift.id, input);
+      await refreshBoard();
+      setShowImport(false);
+      setNotice({
+        type: "success",
+        text: `已导入 ${imported.patientCount} 位患者、${imported.recordCount} 条本班记录；${imported.missingFieldCount} 个缺失字段保持空白。`,
+      });
+    } catch (error) {
+      setNotice({ type: "error", text: getErrorMessage(error) });
+    } finally {
+      setImportLoading(false);
+    }
+  }
+
   const jobRunning = job && !terminalJobStatuses.has(job.status);
   const progress = job?.totalCount
     ? Math.round(((job.completedCount + job.failedCount) / job.totalCount) * 100)
@@ -272,29 +299,48 @@ export function HandoffWorkspace({
           <span className={styles.timelineEnd}>20:00</span>
         </div>
 
-        <button
-          type="button"
-          className={styles.generateButton}
-          onClick={handleGenerate}
-          disabled={Boolean(jobRunning)}
-        >
-          <span className={styles.generateIcon}>
-            {jobRunning ? (
-              <LoaderCircle className={styles.spin} aria-hidden="true" />
-            ) : (
-              <Sparkles aria-hidden="true" />
-            )}
-          </span>
-          <span>
-            <strong>{jobRunning ? "正在生成交班" : "生成本班交班"}</strong>
-            <small>
-              {board.generationMode === "demo"
-                ? "演示生成器 · 无真实患者数据"
-                : "DeepSeek · 结构化提取"}
-            </small>
-          </span>
-          <ArrowRight aria-hidden="true" />
-        </button>
+        <div className={styles.heroActions}>
+          <button
+            type="button"
+            className={`${styles.importButton} ${!board.lastImport ? styles.importButtonPrimary : ""}`}
+            onClick={() => setShowImport(true)}
+          >
+            <FileUp aria-hidden="true" />
+            <span>
+              <strong>{board.lastImport ? "重新导入班次资料" : "导入班次资料"}</strong>
+              <small>
+                {board.lastImport
+                  ? `${board.lastImport.patientCount} 位患者 · ${formatDateTime(board.lastImport.importedAt)} 导入`
+                  : "HIS / EMR / 医嘱 / 检验检查"}
+              </small>
+            </span>
+          </button>
+          <button
+            type="button"
+            className={styles.generateButton}
+            onClick={handleGenerate}
+            disabled={Boolean(jobRunning) || !board.lastImport}
+          >
+            <span className={styles.generateIcon}>
+              {jobRunning ? (
+                <LoaderCircle className={styles.spin} aria-hidden="true" />
+              ) : (
+                <Sparkles aria-hidden="true" />
+              )}
+            </span>
+            <span>
+              <strong>{jobRunning ? "正在生成交班" : "生成本班交班"}</strong>
+              <small>
+                {!board.lastImport
+                  ? "请先导入当前班次资料"
+                  : board.generationMode === "demo"
+                    ? "演示生成器 · 无真实患者数据"
+                    : "DeepSeek · 结构化提取"}
+              </small>
+            </span>
+            <ArrowRight aria-hidden="true" />
+          </button>
+        </div>
       </section>
 
       {jobRunning && job && (
@@ -396,7 +442,22 @@ export function HandoffWorkspace({
           </div>
         </header>
 
-        {visiblePatients.length > 0 ? (
+        {!board.lastImport ? (
+          <div className={styles.importEmptyState}>
+            <span className={styles.emptyImportIcon}>
+              <FileUp aria-hidden="true" />
+            </span>
+            <div>
+              <span>STEP 01 · DATA INTAKE</span>
+              <h3>尚未导入本班患者资料</h3>
+              <p>从医院现有系统导入患者、完整病历、今日医嘱和检验检查状态后，才能生成交班卡。</p>
+            </div>
+            <button type="button" onClick={() => setShowImport(true)}>
+              打开导入中心
+              <ArrowRight aria-hidden="true" />
+            </button>
+          </div>
+        ) : visiblePatients.length > 0 ? (
           <div className={styles.patientGrid}>
             {visiblePatients.map((patient, index) => (
               <PatientCard
@@ -439,6 +500,14 @@ export function HandoffWorkspace({
           onClose={closePatient}
           onChange={setDetail}
           onBoardRefresh={refreshBoard}
+        />
+      )}
+
+      {showImport && (
+        <DataImportDialog
+          loading={importLoading}
+          onClose={() => setShowImport(false)}
+          onImport={handleImport}
         />
       )}
 

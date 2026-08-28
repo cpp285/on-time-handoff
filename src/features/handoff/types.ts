@@ -47,6 +47,19 @@ export interface GenerationJob {
   finishedAt: string | null;
 }
 
+export type ImportSourceMode = "hospital_simulator" | "local_file_demo";
+
+export interface ImportBatchSummary {
+  id: string;
+  sourceMode: ImportSourceMode;
+  sourceName: string;
+  fileName: string | null;
+  patientCount: number;
+  recordCount: number;
+  missingFieldCount: number;
+  importedAt: string;
+}
+
 export interface PatientCard {
   id: string;
   handoffId: string;
@@ -80,6 +93,7 @@ export interface BoardData {
   };
   patients: PatientCard[];
   activeJob: GenerationJob | null;
+  lastImport: ImportBatchSummary | null;
   generationMode: "deepseek" | "demo";
 }
 

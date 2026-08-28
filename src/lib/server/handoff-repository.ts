@@ -16,6 +16,8 @@ import type {
   HandoffDetail,
   HandoffItemView,
   HandoffStatus,
+  ImportBatchSummary,
+  ImportSourceMode,
   PendingTaskView,
   PatientCard,
   ShiftInfo,
@@ -77,6 +79,19 @@ function mapJob(row: SqlRow): GenerationJob {
   };
 }
 
+function mapImportBatch(row: SqlRow): ImportBatchSummary {
+  return {
+    id: String(row.id),
+    sourceMode: String(row.source_mode) as ImportSourceMode,
+    sourceName: String(row.source_name),
+    fileName: text(row.file_name),
+    patientCount: Number(row.patient_count),
+    recordCount: Number(row.record_count),
+    missingFieldCount: Number(row.missing_field_count),
+    importedAt: String(row.imported_at),
+  };
+}
+
 function getShift() {
   const row = getDatabase()
     .prepare("SELECT * FROM shifts WHERE id = ?")
@@ -92,7 +107,10 @@ export function getBoard(): BoardData {
     .get(DEMO_WARD_ID) as SqlRow | undefined;
   if (!ward) throw new Error("Demo ward was not found");
 
-  const patientRows = database
+  const lastImport = getLastImport();
+
+  const patientRows = lastImport
+    ? (database
     .prepare(`
       SELECT
         p.*,
@@ -116,7 +134,8 @@ export function getBoard(): BoardData {
       WHERE p.ward_id = ?
       ORDER BY p.sort_order
     `)
-    .all(CURRENT_SHIFT_ID, CURRENT_SHIFT_ID, DEMO_WARD_ID) as SqlRow[];
+    .all(CURRENT_SHIFT_ID, CURRENT_SHIFT_ID, DEMO_WARD_ID) as SqlRow[])
+    : [];
 
   const changeQuery = database.prepare(`
     SELECT content FROM handoff_items
@@ -146,7 +165,9 @@ export function getBoard(): BoardData {
         status: String(row.status) as HandoffStatus,
         summary:
           String(row.condition_summary || "") ||
-          `等待整理本班记录 · ${String(row.basic_info)}`,
+          (String(row.basic_info || "")
+            ? `等待整理本班记录 · ${String(row.basic_info)}`
+            : "原始资料未包含当前病情，待白班医生确认"),
         importantChanges: changes.map((item) => String(item.content)),
         pendingCount: Number(row.pending_count),
         confirmationCount: Number(row.confirmation_count),
@@ -197,8 +218,71 @@ export function getBoard(): BoardData {
     stats,
     patients,
     activeJob: activeJobRow ? mapJob(activeJobRow) : null,
+    lastImport,
     generationMode: process.env.DEEPSEEK_API_KEY ? "deepseek" : "demo",
   };
+}
+
+export function getLastImport(): ImportBatchSummary | null {
+  const row = getDatabase()
+    .prepare(`
+      SELECT * FROM import_batches
+      WHERE shift_id = ? AND status = 'completed'
+      ORDER BY imported_at DESC
+      LIMIT 1
+    `)
+    .get(CURRENT_SHIFT_ID) as SqlRow | undefined;
+  return row ? mapImportBatch(row) : null;
+}
+
+export function createDemoImport(input: {
+  sourceMode: ImportSourceMode;
+  fileName?: string | null;
+  idempotencyKey: string;
+}): ImportBatchSummary {
+  const database = getDatabase();
+  const existing = database
+    .prepare("SELECT * FROM import_batches WHERE idempotency_key = ?")
+    .get(input.idempotencyKey) as SqlRow | undefined;
+  if (existing) return mapImportBatch(existing);
+
+  const patientCount = Number(
+    (database
+      .prepare("SELECT COUNT(*) AS count FROM patients WHERE ward_id = ?")
+      .get(DEMO_WARD_ID) as { count: number }).count,
+  );
+  const recordCount = Number(
+    (database
+      .prepare("SELECT COUNT(*) AS count FROM source_records WHERE shift_id = ?")
+      .get(CURRENT_SHIFT_ID) as { count: number }).count,
+  );
+  const id = randomUUID();
+  const sourceName =
+    input.sourceMode === "hospital_simulator"
+      ? "HIS / EMR / LIS 模拟接口"
+      : "本地导出文件（演示）";
+  database
+    .prepare(`
+      INSERT INTO import_batches (
+        id, shift_id, idempotency_key, source_mode, source_name,
+        file_name, status, patient_count, record_count,
+        missing_field_count, imported_at
+      ) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?)
+    `)
+    .run(
+      id,
+      CURRENT_SHIFT_ID,
+      input.idempotencyKey,
+      input.sourceMode,
+      sourceName,
+      input.fileName ?? null,
+      patientCount,
+      recordCount,
+      3,
+      new Date().toISOString(),
+    );
+
+  return getLastImport() as ImportBatchSummary;
 }
 
 export function getHandoffDetail(handoffId: string): HandoffDetail | null {

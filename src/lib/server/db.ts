@@ -11,7 +11,7 @@ import {
   demoCases,
 } from "@/features/handoff/demo-data";
 
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 type GlobalWithDatabase = typeof globalThis & {
   __onTimeHandoffDb?: DatabaseSync;
@@ -138,6 +138,20 @@ function migrate(database: DatabaseSync) {
       finished_at TEXT
     ) STRICT;
 
+    CREATE TABLE IF NOT EXISTS import_batches (
+      id TEXT PRIMARY KEY,
+      shift_id TEXT NOT NULL REFERENCES shifts(id),
+      idempotency_key TEXT NOT NULL UNIQUE,
+      source_mode TEXT NOT NULL CHECK (source_mode IN ('hospital_simulator', 'local_file_demo')),
+      source_name TEXT NOT NULL,
+      file_name TEXT,
+      status TEXT NOT NULL CHECK (status IN ('completed', 'failed')),
+      patient_count INTEGER NOT NULL,
+      record_count INTEGER NOT NULL,
+      missing_field_count INTEGER NOT NULL,
+      imported_at TEXT NOT NULL
+    ) STRICT;
+
     CREATE TABLE IF NOT EXISTS generation_runs (
       id TEXT PRIMARY KEY,
       generation_job_id TEXT NOT NULL REFERENCES generation_jobs(id),
@@ -175,6 +189,7 @@ function migrate(database: DatabaseSync) {
     CREATE INDEX IF NOT EXISTS idx_handoff_items_handoff ON handoff_items(handoff_id, category, sort_order);
     CREATE INDEX IF NOT EXISTS idx_pending_tasks_patient ON pending_tasks(patient_id, status);
     CREATE INDEX IF NOT EXISTS idx_generation_jobs_shift ON generation_jobs(shift_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_import_batches_shift ON import_batches(shift_id, imported_at);
   `);
 
   database.exec(`PRAGMA user_version = ${DATABASE_VERSION};`);

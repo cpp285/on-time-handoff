@@ -2,7 +2,10 @@ import { z } from "zod";
 
 import { CURRENT_SHIFT_ID } from "@/features/handoff/demo-data";
 import { runGenerationJob } from "@/lib/server/generation-runner";
-import { createGenerationJob } from "@/lib/server/handoff-repository";
+import {
+  createGenerationJob,
+  getLastImport,
+} from "@/lib/server/handoff-repository";
 import { handleRouteError, jsonError, readJson } from "@/lib/server/http";
 
 const createJobSchema = z.object({
@@ -17,6 +20,13 @@ export async function POST(
     const { shiftId } = await params;
     if (shiftId !== CURRENT_SHIFT_ID) {
       return jsonError("SHIFT_NOT_FOUND", "当前演示班次不存在。", 404);
+    }
+    if (!getLastImport()) {
+      return jsonError(
+        "IMPORT_REQUIRED",
+        "请先导入当前班次的患者、病历和医嘱资料。",
+        409,
+      );
     }
     const input = createJobSchema.parse(await readJson(request));
     const result = createGenerationJob(input.idempotencyKey);

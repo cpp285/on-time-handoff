@@ -263,13 +263,22 @@ export function HandoffDrawer({
                     aria-label="编辑当前病情概况"
                   />
                 ) : (
-                  <p>{detail.conditionSummary}</p>
+                  detail.conditionSummary ? (
+                    <p>{detail.conditionSummary}</p>
+                  ) : (
+                    <div className={styles.emptyClinicalField}>
+                      <AlertCircle aria-hidden="true" />
+                      <span>
+                        <strong>原始资料未包含当前病情概况</strong>
+                        请白班医生点击“编辑草稿”后补充确认。
+                      </span>
+                    </div>
+                  )
                 )}
               </section>
 
               {categories.map((category, categoryIndex) => {
-                const items = groupedItems[category];
-                if (!items?.length) return null;
+                const items = groupedItems[category] ?? [];
                 return (
                   <section
                     className={`${styles.detailSection} ${styles[`section_${category}`]}`}
@@ -286,7 +295,7 @@ export function HandoffDrawer({
                       <span className={styles.sectionCount}>{items.length}</span>
                     </div>
                     <div className={styles.detailItems}>
-                      {items.map((item) => (
+                      {items.length > 0 ? items.map((item) => (
                         <article className={styles.detailItem} key={item.id}>
                           <span className={styles.itemBullet} aria-hidden="true" />
                           <div>
@@ -319,7 +328,15 @@ export function HandoffDrawer({
                             </div>
                           </div>
                         </article>
-                      ))}
+                      )) : (
+                        <div className={styles.emptyStructuredField}>
+                          <AlertCircle aria-hidden="true" />
+                          <span>
+                            原始资料中没有明确的{categoryLabels[category]}，保持空白，
+                            待白班医生确认是否需要补充。
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </section>
                 );

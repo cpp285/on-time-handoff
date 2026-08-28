@@ -198,9 +198,61 @@
 
 .heroCopy,
 .shiftTimeline,
-.generateButton {
+.heroActions {
   position: relative;
   z-index: 1;
+}
+
+.heroActions {
+  display: grid;
+  gap: 9px;
+}
+
+.importButton {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  align-items: center;
+  min-height: 48px;
+  padding: 9px 14px;
+  color: #f7f3e8;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+.importButton > svg {
+  width: 18px;
+  color: #f0c766;
+}
+
+.importButton > span {
+  display: grid;
+  gap: 2px;
+}
+
+.importButton strong {
+  font-size: 11px;
+}
+
+.importButton small {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 8px;
+}
+
+.importButtonPrimary {
+  color: var(--ink-950);
+  background: #f0c766;
+  border-color: #f0c766;
+}
+
+.importButtonPrimary > svg {
+  color: var(--ink-950);
+}
+
+.importButtonPrimary small {
+  color: rgba(7, 25, 23, 0.6);
 }
 
 .eyebrow {
@@ -320,6 +372,7 @@
   box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.18);
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease;
+  width: 100%;
 }
 
 .generateButton:not(:disabled):hover {
@@ -328,8 +381,8 @@
 }
 
 .generateButton:disabled {
-  cursor: wait;
-  opacity: 0.84;
+  cursor: not-allowed;
+  opacity: 0.46;
 }
 
 .generateIcon {
@@ -860,6 +913,90 @@
   font-size: 11px;
 }
 
+.importEmptyState {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 26px;
+  align-items: center;
+  min-height: 230px;
+  padding: 38px 42px;
+  overflow: hidden;
+  color: white;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.04), transparent 48%),
+    var(--ink-900);
+  border: 1px solid var(--ink-800);
+}
+
+.importEmptyState::after {
+  position: absolute;
+  right: -28px;
+  width: 180px;
+  height: 180px;
+  content: "";
+  border: 1px solid rgba(240, 199, 102, 0.18);
+  border-radius: 50%;
+  box-shadow: 0 0 0 34px rgba(240, 199, 102, 0.04);
+}
+
+.emptyImportIcon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  color: var(--ink-950);
+  background: #f0c766;
+  border-radius: 50%;
+  box-shadow: 0 0 0 10px rgba(240, 199, 102, 0.08);
+}
+
+.emptyImportIcon svg {
+  width: 29px;
+}
+
+.importEmptyState > div > span {
+  color: #a9c8bb;
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+}
+
+.importEmptyState h3 {
+  margin: 7px 0 6px;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.5vw, 32px);
+  font-weight: 600;
+}
+
+.importEmptyState p {
+  max-width: 650px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.importEmptyState > button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 18px;
+  color: var(--ink-950);
+  background: #f0c766;
+  border: 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.importEmptyState > button svg {
+  width: 16px;
+}
+
 .pageFooter {
   display: flex;
   justify-content: center;
@@ -876,6 +1013,414 @@
 
 .pageFooter svg {
   width: 13px;
+}
+
+.importBackdrop {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(7, 25, 23, 0.76);
+  backdrop-filter: blur(7px);
+  animation: backdrop-in 180ms ease both;
+}
+
+.importDialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(1120px, 100%);
+  max-height: min(880px, calc(100vh - 48px));
+  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 32px 110px rgba(0, 0, 0, 0.38);
+  animation: source-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.importHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 25px 30px 22px;
+  color: white;
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.04), transparent 55%),
+    var(--ink-950);
+  border-bottom: 3px solid #f0c766;
+}
+
+.importKicker {
+  color: #9fc2b4;
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+.importHeader h2 {
+  margin: 6px 0 4px;
+  font-family: var(--font-display);
+  font-size: 29px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.importHeader p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 11px;
+}
+
+.importBody {
+  overflow-y: auto;
+  padding: 26px 30px 30px;
+}
+
+.integrationRail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(138px, 0.72fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sourceSystem {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  min-height: 112px;
+  padding: 15px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.sourceSystem > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--ink-800);
+  background: #e6eee9;
+}
+
+.sourceSystem > span svg {
+  width: 17px;
+}
+
+.sourceSystem > div {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+
+.sourceSystem strong {
+  color: var(--ink-900);
+  font-family: var(--font-display);
+  font-size: 13px;
+}
+
+.sourceSystem p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.sourceSystem small {
+  width: fit-content;
+  margin-top: 3px;
+  padding: 3px 5px;
+  color: var(--success);
+  background: #e6f2eb;
+  font-family: var(--font-data);
+  font-size: 7px;
+}
+
+.sourceSystem > svg {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: -19px;
+  width: 14px;
+  color: var(--signal);
+  transform: translateY(-50%);
+}
+
+.importDestination {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  min-height: 112px;
+  color: white;
+  text-align: center;
+  background: var(--ink-900);
+  border: 1px solid var(--ink-800);
+}
+
+.importDestination svg {
+  width: 24px;
+  margin-bottom: 4px;
+  color: #f0c766;
+}
+
+.importDestination span {
+  color: #a7c6ba;
+  font-family: var(--font-data);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.importDestination strong {
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+
+.importModeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.importModeGrid > button,
+.importModeGrid > label {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 70px;
+  padding: 13px 15px;
+  color: var(--ink-900);
+  text-align: left;
+  background: #f7f4ec;
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+}
+
+.importModeGrid > button > svg:first-child,
+.importModeGrid > label > svg:first-child {
+  width: 20px;
+  color: var(--muted);
+}
+
+.importModeGrid > button > svg:last-child,
+.importModeGrid > label > svg:last-child {
+  width: 16px;
+  color: var(--muted-light);
+}
+
+.importModeGrid > button > span,
+.importModeGrid > label > span {
+  display: grid;
+  gap: 3px;
+}
+
+.importModeGrid strong {
+  font-size: 11px;
+}
+
+.importModeGrid small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.importModeGrid input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.importModeGrid .activeImportMode,
+.importModeGrid .activeFileMode {
+  background: #e8f0eb;
+  border-color: #7ba397;
+  box-shadow: inset 3px 0 0 var(--ink-800);
+}
+
+.importModeGrid .activeImportMode > svg:last-child,
+.importModeGrid .activeFileMode > svg:last-child {
+  color: var(--success);
+}
+
+.importInlineError {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: -7px 0 16px;
+  padding: 9px 11px;
+  color: var(--danger);
+  background: #faebe7;
+  border: 1px solid #e9b7ad;
+  font-size: 9px;
+}
+
+.importInlineError svg {
+  width: 15px;
+}
+
+.coveragePanel {
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.coveragePanel > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.coveragePanel > header span {
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px;
+  letter-spacing: 0.13em;
+}
+
+.coveragePanel h3 {
+  margin: 3px 0 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+
+.coveragePanel > header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.coveragePanel > header p strong {
+  color: var(--ink-900);
+  font-family: var(--font-data);
+  font-size: 14px;
+}
+
+.coverageTable > div {
+  display: grid;
+  grid-template-columns: 0.8fr 1.8fr 0.55fr 0.6fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 42px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.coverageTable > div:last-child {
+  border-bottom: 0;
+}
+
+.coverageTable strong {
+  font-size: 10px;
+}
+
+.coverageTable span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.coverageTable b {
+  font-family: var(--font-data);
+  font-size: 9px;
+}
+
+.coverageTable small {
+  justify-self: end;
+  padding: 3px 6px;
+  color: var(--signal-dark);
+  background: #fff0e8;
+  font-size: 7px;
+}
+
+.coverageTable .coverageComplete {
+  color: var(--success);
+  background: #e7f2eb;
+}
+
+.importSafetyNote {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 13px 15px;
+  color: var(--ink-900);
+  background: #fff5d9;
+  border: 1px solid #e4ce8e;
+}
+
+.importSafetyNote > svg {
+  flex: 0 0 auto;
+  width: 19px;
+  color: #8c6812;
+}
+
+.importSafetyNote strong {
+  display: block;
+  font-size: 10px;
+}
+
+.importSafetyNote p {
+  margin: 3px 0 0;
+  color: #786b4c;
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.importFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 74px;
+  padding: 12px 30px;
+  background: #ebe7dc;
+  border-top: 1px solid var(--line-strong);
+}
+
+.importFooter > span {
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+}
+
+.importFooter > div {
+  display: flex;
+  gap: 9px;
+}
+
+.importFooter button {
+  min-height: 42px;
+  padding: 0 16px;
+  color: var(--ink-900);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.importFooter .importPrimaryButton {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: white;
+  background: var(--ink-900);
+  border-color: var(--ink-900);
+}
+
+.importPrimaryButton svg {
+  width: 16px;
+}
+
+.importFooter button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .drawerBackdrop {
@@ -1092,6 +1637,33 @@
   border-color: var(--ink-900);
 }
 
+.emptyClinicalField {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 13px;
+  color: #f8e2a7;
+  background: rgba(240, 199, 102, 0.08);
+  border: 1px dashed rgba(240, 199, 102, 0.45);
+}
+
+.emptyClinicalField > svg {
+  flex: 0 0 auto;
+  width: 17px;
+}
+
+.emptyClinicalField > span {
+  display: grid;
+  gap: 3px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 9px;
+}
+
+.emptyClinicalField strong {
+  color: #f8e2a7;
+  font-size: 10px;
+}
+
 .sectionHeading {
   display: flex;
   align-items: center;
@@ -1212,6 +1784,24 @@
 
 .detailItems {
   display: grid;
+}
+
+.emptyStructuredField {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 12px;
+  color: var(--muted);
+  background: #f7f4ec;
+  border: 1px dashed var(--line-strong);
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+.emptyStructuredField svg {
+  flex: 0 0 auto;
+  width: 15px;
+  color: var(--amber);
 }
 
 .detailItem {
@@ -1816,7 +2406,7 @@
     grid-template-columns: 1fr 0.8fr;
   }
 
-  .generateButton {
+  .heroActions {
     grid-column: 2;
   }
 
@@ -1882,9 +2472,94 @@
     font-size: 44px;
   }
 
-  .generateButton {
+  .heroActions {
     grid-column: 1;
     width: 100%;
+  }
+
+  .importEmptyState {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 28px 24px;
+  }
+
+  .importEmptyState > button {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .importBackdrop {
+    padding: 0;
+  }
+
+  .importDialog {
+    width: 100vw;
+    height: 100vh;
+    max-height: none;
+    border: 0;
+  }
+
+  .importHeader {
+    padding: 20px 18px 17px;
+  }
+
+  .importHeader h2 {
+    font-size: 23px;
+  }
+
+  .importBody {
+    padding: 18px;
+  }
+
+  .integrationRail,
+  .importModeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sourceSystem {
+    min-height: 88px;
+  }
+
+  .sourceSystem > svg {
+    display: none;
+  }
+
+  .importDestination {
+    min-height: 84px;
+  }
+
+  .coveragePanel > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .coverageTable > div {
+    grid-template-columns: 0.9fr 1.4fr auto;
+  }
+
+  .coverageTable b {
+    justify-self: end;
+  }
+
+  .coverageTable small {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .importFooter {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 12px 18px;
+  }
+
+  .importFooter > span {
+    display: none;
+  }
+
+  .importFooter > div,
+  .importFooter button {
+    flex: 1;
   }
 
   .shiftTimeline {

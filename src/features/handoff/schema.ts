@@ -8,7 +8,7 @@ export const draftItemSchema = z.object({
 
 export const handoffDraftSchema = z.object({
   patient_id: z.string().trim().min(1),
-  condition_summary: z.string().trim().min(1).max(800),
+  condition_summary: z.string().trim().max(800),
   shift_changes: z.array(draftItemSchema).max(8),
   pending_tasks: z.array(draftItemSchema).max(8),
   next_shift_attention: z.array(draftItemSchema).max(8),
@@ -77,3 +77,19 @@ export const supplementSchema = z.object({
 export const pendingTaskUpdateSchema = z.object({
   status: z.enum(["open", "completed", "cancelled"]),
 });
+
+export const importRequestSchema = z
+  .object({
+    sourceMode: z.enum(["hospital_simulator", "local_file_demo"]),
+    fileName: z.string().trim().min(1).max(180).nullable().optional(),
+    idempotencyKey: z.string().trim().min(8).max(120),
+  })
+  .superRefine((value, context) => {
+    if (value.sourceMode === "local_file_demo" && !value.fileName) {
+      context.addIssue({
+        code: "custom",
+        path: ["fileName"],
+        message: "文件演示模式需要文件名",
+      });
+    }
+  });

@@ -3,6 +3,8 @@ import type {
   BoardData,
   GenerationJob,
   HandoffDetail,
+  ImportBatchSummary,
+  ImportSourceMode,
   PendingTaskView,
 } from "../types";
 
@@ -65,6 +67,19 @@ export function createGenerationJob(shiftId: string) {
 
 export function fetchGenerationJob(jobId: string) {
   return apiRequest<GenerationJob>(`/api/generation-jobs/${jobId}`);
+}
+
+export function importShiftData(
+  shiftId: string,
+  input: { sourceMode: ImportSourceMode; fileName?: string | null },
+) {
+  return apiRequest<ImportBatchSummary>(`/api/shifts/${shiftId}/imports`, {
+    method: "POST",
+    body: JSON.stringify({
+      ...input,
+      idempotencyKey: crypto.randomUUID(),
+    }),
+  });
 }
 
 export function saveHandoff(

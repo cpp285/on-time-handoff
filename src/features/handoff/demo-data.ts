@@ -33,15 +33,15 @@ export const demoCases: DemoCase[] = [
     patient: { id: "P003", bedNo: "03", displayName: "周女士", age: 45, gender: "女", diagnosis: "急性胰腺炎", basicInfo: "入院第 2 天，禁食补液中", acuity: "watch" },
     records: [
       { id: "SRC-P003-A", type: "lab", occurredAt: "2026-08-28T10:20:00+08:00", content: "血淀粉酶较昨日下降，白细胞计数 12.1×10⁹/L。" },
-      { id: "SRC-P003-B", type: "progress", occurredAt: "2026-08-28T15:10:00+08:00", content: "患者腹痛较晨间减轻，无呕吐，继续禁食及补液。" },
+      { id: "SRC-P003-B", type: "progress", occurredAt: "2026-08-28T15:10:00+08:00", content: "患者腹痛较晨间减轻，无呕吐，继续禁食及补液。白班医师交班备注：夜班观察腹痛和呕吐变化，若加重及时复评。" },
     ],
     previousSummary: "急性胰腺炎，腹痛持续，禁食补液中。",
     previousChange: "夜间腹痛未加重。",
     draft: {
       patient_id: "P003",
-      condition_summary: "急性胰腺炎治疗中，腹痛较前减轻，炎症指标仍需观察。",
+      condition_summary: "急性胰腺炎治疗中，腹痛较前减轻；血淀粉酶较昨日下降，白细胞 12.1×10⁹/L。",
       shift_changes: [{ content: "本班腹痛较晨间减轻，无呕吐。", source_record_ids: ["SRC-P003-B"], inherited: false }],
-      pending_tasks: [{ content: "继续观察腹痛及复查淀粉酶趋势。", source_record_ids: ["SRC-P003-A", "SRC-P003-B"], inherited: false }],
+      pending_tasks: [],
       next_shift_attention: [{ content: "若腹痛加重或出现呕吐，请及时复评。", source_record_ids: ["SRC-P003-B"], inherited: false }],
       needs_confirmation: [],
     },
@@ -49,14 +49,14 @@ export const demoCases: DemoCase[] = [
   {
     patient: { id: "P005", bedNo: "05", displayName: "陈先生", age: 72, gender: "男", diagnosis: "慢阻肺急性加重", basicInfo: "鼻导管吸氧 2 L/min", acuity: "critical" },
     records: [
-      { id: "SRC-P005-A", type: "progress", occurredAt: "2026-08-28T09:35:00+08:00", content: "晨间气促较昨日缓解，鼻导管吸氧 2 L/min，SpO₂ 94%。" },
+      { id: "SRC-P005-A", type: "progress", occurredAt: "2026-08-28T09:35:00+08:00", content: "晨间气促较昨日缓解，鼻导管吸氧 2 L/min，SpO₂ 94%。白班医师交班备注：夜班观察呼吸频率、意识和血氧变化。" },
       { id: "SRC-P005-B", type: "lab", occurredAt: "2026-08-28T14:40:00+08:00", content: "血气分析：PaCO₂ 52 mmHg，与晨间接近。" },
     ],
     previousSummary: "慢阻肺急性加重，低流量吸氧，夜间呼吸平稳。",
     previousChange: "夜间 SpO₂ 维持 93%—95%。",
     draft: {
       patient_id: "P005",
-      condition_summary: "慢阻肺急性加重，低流量吸氧下氧合尚可，二氧化碳潴留需持续关注。",
+      condition_summary: "慢阻肺急性加重，鼻导管吸氧 2 L/min 下 SpO₂ 94%，PaCO₂ 52 mmHg。",
       shift_changes: [{ content: "气促较昨日缓解，吸氧 2 L/min 下 SpO₂ 94%。", source_record_ids: ["SRC-P005-A"], inherited: false }],
       pending_tasks: [],
       next_shift_attention: [{ content: "夜班继续观察呼吸频率、意识和血氧变化。", source_record_ids: ["SRC-P005-A", "SRC-P005-B"], inherited: false }],
@@ -67,7 +67,7 @@ export const demoCases: DemoCase[] = [
     patient: { id: "P007", bedNo: "07", displayName: "孙女士", age: 61, gender: "女", diagnosis: "脑梗死恢复期", basicInfo: "右侧肢体肌力 4 级", acuity: "watch" },
     records: [
       { id: "SRC-P007-A", type: "exam", occurredAt: "2026-08-28T11:50:00+08:00", content: "头颅 MRI 已完成，正式报告尚未回传。" },
-      { id: "SRC-P007-B", type: "progress", occurredAt: "2026-08-28T16:05:00+08:00", content: "神志清楚，右侧肢体肌力 4 级，与晨间相比无变化。" },
+      { id: "SRC-P007-B", type: "progress", occurredAt: "2026-08-28T16:05:00+08:00", content: "神志清楚，右侧肢体肌力 4 级，与晨间相比无变化。白班医师交班备注：继续观察意识及肢体活动变化。" },
     ],
     previousSummary: "脑梗死恢复期，神志清楚，右侧肌力 4 级。",
     previousChange: "已预约头颅 MRI。",
@@ -85,7 +85,7 @@ export const demoCases: DemoCase[] = [
     patient: { id: "P009", bedNo: "09", displayName: "吴先生", age: 58, gender: "男", diagnosis: "上消化道出血", basicInfo: "今日未再呕血", acuity: "watch" },
     records: [
       { id: "SRC-P009-A", type: "lab", occurredAt: "2026-08-28T12:20:00+08:00", content: "血红蛋白 86 g/L，较晨间 88 g/L 轻度下降。" },
-      { id: "SRC-P009-B", type: "progress", occurredAt: "2026-08-28T17:00:00+08:00", content: "本班未再呕血，生命体征平稳，排黑便 1 次。" },
+      { id: "SRC-P009-B", type: "progress", occurredAt: "2026-08-28T17:00:00+08:00", content: "本班未再呕血，生命体征平稳，排黑便 1 次。白班医师交班备注：夜班关注呕血、黑便及生命体征变化。" },
     ],
     previousSummary: "上消化道出血，禁食，血红蛋白偏低。",
     previousChange: "夜间无呕血。",
@@ -93,7 +93,7 @@ export const demoCases: DemoCase[] = [
       patient_id: "P009",
       condition_summary: "上消化道出血观察中，本班无再呕血，血红蛋白轻度下降。",
       shift_changes: [{ content: "本班无再呕血，排黑便 1 次。", source_record_ids: ["SRC-P009-B"], inherited: false }],
-      pending_tasks: [{ content: "夜班复查血常规并关注血红蛋白变化。", source_record_ids: ["SRC-P009-A"], inherited: false }],
+      pending_tasks: [],
       next_shift_attention: [{ content: "关注呕血、黑便及生命体征变化。", source_record_ids: ["SRC-P009-A", "SRC-P009-B"], inherited: false }],
       needs_confirmation: [],
     },
@@ -101,7 +101,7 @@ export const demoCases: DemoCase[] = [
   {
     patient: { id: "P012", bedNo: "12", displayName: "林女士", age: 67, gender: "女", diagnosis: "社区获得性肺炎", basicInfo: "傍晚发热，血培养待回", acuity: "critical" },
     records: [
-      { id: "SRC-P012-A", type: "progress", occurredAt: "2026-08-28T18:00:00+08:00", content: "18:00 体温 38.5℃，较午后升高，患者诉畏寒。" },
+      { id: "SRC-P012-A", type: "progress", occurredAt: "2026-08-28T18:00:00+08:00", content: "18:00 体温 38.5℃，较午后升高，患者诉畏寒。白班医师交班备注：夜班继续关注体温、寒战及血培养结果。" },
       { id: "SRC-P012-B", type: "order", occurredAt: "2026-08-28T18:12:00+08:00", content: "已留取两组血培养并送检，结果未回。" },
       { id: "SRC-P012-C", type: "lab", occurredAt: "2026-08-28T15:30:00+08:00", content: "C 反应蛋白 82 mg/L，较昨日升高。" },
     ],
@@ -130,7 +130,7 @@ export const demoCases: DemoCase[] = [
       condition_summary: "阑尾炎术后第 1 天，恢复平稳，已下床并耐受流质饮食。",
       shift_changes: [{ content: "本班已下床活动并开始流质饮食，耐受良好。", source_record_ids: ["SRC-P015-A", "SRC-P015-B"], inherited: false }],
       pending_tasks: [],
-      next_shift_attention: [{ content: "观察切口、体温和进食耐受情况。", source_record_ids: ["SRC-P015-A", "SRC-P015-B"], inherited: false }],
+      next_shift_attention: [],
       needs_confirmation: [],
     },
   },
@@ -138,7 +138,7 @@ export const demoCases: DemoCase[] = [
     patient: { id: "P018", bedNo: "18", displayName: "钱女士", age: 54, gender: "女", diagnosis: "2 型糖尿病伴感染", basicInfo: "血糖波动", acuity: "watch" },
     records: [
       { id: "SRC-P018-A", type: "lab", occurredAt: "2026-08-28T16:30:00+08:00", content: "餐后 2 小时血糖 15.8 mmol/L。" },
-      { id: "SRC-P018-B", type: "order", occurredAt: "2026-08-28T16:45:00+08:00", content: "胰岛素剂量已按医嘱调整，晚餐前复测血糖。" },
+      { id: "SRC-P018-B", type: "order", occurredAt: "2026-08-28T16:45:00+08:00", content: "胰岛素剂量已按医嘱调整，晚餐前复测血糖。白班医师交班备注：夜班关注血糖及低血糖症状。" },
     ],
     previousSummary: "糖尿病伴足部感染，血糖控制欠佳。",
     previousChange: "夜间血糖 11.2 mmol/L。",
@@ -154,7 +154,7 @@ export const demoCases: DemoCase[] = [
   {
     patient: { id: "P021", bedNo: "21", displayName: "李先生", age: 76, gender: "男", diagnosis: "心力衰竭", basicInfo: "利尿治疗中", acuity: "critical" },
     records: [
-      { id: "SRC-P021-A", type: "progress", occurredAt: "2026-08-28T09:50:00+08:00", content: "静息气促较昨日减轻，双下肢水肿仍为 ++。" },
+      { id: "SRC-P021-A", type: "progress", occurredAt: "2026-08-28T09:50:00+08:00", content: "静息气促较昨日减轻，双下肢水肿仍为 ++。白班医师交班备注：记录夜间尿量并观察呼吸、水肿变化。" },
       { id: "SRC-P021-B", type: "lab", occurredAt: "2026-08-28T14:15:00+08:00", content: "血钾 3.4 mmol/L，已通知值班医生。" },
     ],
     previousSummary: "心力衰竭加重，利尿治疗中，下肢水肿明显。",
@@ -163,7 +163,7 @@ export const demoCases: DemoCase[] = [
       patient_id: "P021",
       condition_summary: "心力衰竭利尿治疗中，气促有所缓解，下肢水肿仍明显，血钾偏低。",
       shift_changes: [{ content: "静息气促较昨日减轻，双下肢水肿仍为 ++。", source_record_ids: ["SRC-P021-A"], inherited: false }],
-      pending_tasks: [{ content: "低钾处理后复查血钾。", source_record_ids: ["SRC-P021-B"], inherited: false }],
+      pending_tasks: [],
       next_shift_attention: [{ content: "记录夜间尿量并观察呼吸、水肿变化。", source_record_ids: ["SRC-P021-A"], inherited: false }],
       needs_confirmation: [{ content: "血钾 3.4 mmol/L，补钾与复查安排需医生确认。", source_record_ids: ["SRC-P021-B"], inherited: false }],
     },
@@ -172,7 +172,7 @@ export const demoCases: DemoCase[] = [
     patient: { id: "P023", bedNo: "23", displayName: "王女士", age: 31, gender: "女", diagnosis: "急性肾盂肾炎", basicInfo: "抗感染治疗中", acuity: "stable" },
     records: [
       { id: "SRC-P023-A", type: "progress", occurredAt: "2026-08-28T11:15:00+08:00", content: "本班体温正常，腰痛较昨日减轻。" },
-      { id: "SRC-P023-B", type: "lab", occurredAt: "2026-08-28T15:25:00+08:00", content: "尿培养初步提示革兰阴性杆菌，药敏结果待回。" },
+      { id: "SRC-P023-B", type: "lab", occurredAt: "2026-08-28T15:25:00+08:00", content: "尿培养初步提示革兰阴性杆菌，药敏结果待回。白班医师交班备注：夜班关注体温及药敏结果。" },
     ],
     previousSummary: "急性肾盂肾炎，发热及腰痛。",
     previousChange: "夜间最高体温 37.6℃。",
@@ -188,7 +188,7 @@ export const demoCases: DemoCase[] = [
   {
     patient: { id: "P026", bedNo: "26", displayName: "郑先生", age: 63, gender: "男", diagnosis: "急性胆管炎", basicInfo: "ERCP 术后观察", acuity: "watch" },
     records: [
-      { id: "SRC-P026-A", type: "progress", occurredAt: "2026-08-28T12:40:00+08:00", content: "ERCP 术后返回病房，腹痛轻，无呕吐。" },
+      { id: "SRC-P026-A", type: "progress", occurredAt: "2026-08-28T12:40:00+08:00", content: "ERCP 术后返回病房，腹痛轻，无呕吐。白班医师交班备注：夜班关注腹痛、呕吐及血淀粉酶结果。" },
       { id: "SRC-P026-B", type: "lab", occurredAt: "2026-08-28T17:15:00+08:00", content: "术后血淀粉酶结果尚未回报。" },
     ],
     previousSummary: "急性胆管炎，拟行 ERCP。",

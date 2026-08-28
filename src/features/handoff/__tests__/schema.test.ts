@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { handoffDraftSchema } from "../schema";
+import { handoffDraftSchema, importRequestSchema } from "../schema";
 
 describe("handoff draft schema", () => {
   it("accepts the fixed structured handoff contract", () => {
@@ -23,6 +23,19 @@ describe("handoff draft schema", () => {
     expect(result.shift_changes).toHaveLength(1);
   });
 
+  it("keeps the condition blank when the imported source has no evidence", () => {
+    const result = handoffDraftSchema.parse({
+      patient_id: "P001",
+      condition_summary: "",
+      shift_changes: [],
+      pending_tasks: [],
+      next_shift_attention: [],
+      needs_confirmation: [],
+    });
+
+    expect(result.condition_summary).toBe("");
+  });
+
   it("rejects free-form or source-less output", () => {
     const result = handoffDraftSchema.safeParse({
       patient_id: "P012",
@@ -34,5 +47,25 @@ describe("handoff draft schema", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe("import request schema", () => {
+  it("accepts the hospital simulator without a file", () => {
+    expect(
+      importRequestSchema.parse({
+        sourceMode: "hospital_simulator",
+        idempotencyKey: "import-demo-001",
+      }).sourceMode,
+    ).toBe("hospital_simulator");
+  });
+
+  it("requires a file name for the local file demo", () => {
+    expect(
+      importRequestSchema.safeParse({
+        sourceMode: "local_file_demo",
+        idempotencyKey: "import-file-001",
+      }).success,
+    ).toBe(false);
   });
 });
