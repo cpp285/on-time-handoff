@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -45,3 +46,8 @@ next-env.d.ts
 /准点交班_架构设计.md
 /AI产品Vibe Coding通用技术栈手册(1).md
 /AI产品Vibe Coding通用前端技术栈手册(1).md
+
+# local sqlite data
+/data/*.sqlite
+/data/*.sqlite-shm
+/data/*.sqlite-wal
