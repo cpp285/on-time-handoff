@@ -1,0 +1,1768 @@
+.screenApp {
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    linear-gradient(rgba(23, 60, 56, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 60, 56, 0.026) 1px, transparent 1px),
+    var(--paper);
+  background-size: 30px 30px;
+}
+
+.appHeader,
+.brand,
+.brand > span,
+.brandMark,
+.departmentIdentity,
+.departmentIdentity > span,
+.headerActions,
+.moduleRail button,
+.pageHeader,
+.pageActions,
+.primaryTopAction,
+.printTopAction,
+.secondaryTopAction,
+.boardToolbar,
+.searchBar,
+.boardStats,
+.boardStats span,
+.patientCard header,
+.patientTitle,
+.documentProgress > span,
+.patientCard footer,
+.patientCard footer span,
+.patientCard footer strong,
+.editorTopbar,
+.backButton,
+.editorTopbar > div,
+.documentTimeline header,
+.documentTimeline button,
+.documentTimeline button > span:nth-child(2),
+.documentEditor > header,
+.documentEditor > header > div,
+.documentEditor > header > div > span,
+.patientStrip,
+.patientStrip span,
+.documentEditor > footer,
+.documentEditor > footer span,
+.documentEditor > footer div,
+.documentEditor > footer button,
+.reviewSummary,
+.reviewStatus,
+.reviewedStatus,
+.handoffEmpty > span,
+.handoffEmpty > button,
+.handoffForm > header,
+.handoffForm > header > span,
+.handoffFields > section > header,
+.handoffFields > section > header > div,
+.evidenceRow,
+.reviewFooter,
+.reviewFooter > span,
+.reviewFooter button,
+.sourceDrawer header,
+.sourceDrawer header > span,
+.sourceMeta,
+.notice,
+.printBoard > header,
+.printList article > div,
+.printBoard > footer {
+  display: flex;
+  align-items: center;
+}
+
+.appHeader {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  min-height: 70px;
+  padding: 9px 26px;
+  color: #f7f3e8;
+  background: var(--ink-950);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.brand {
+  gap: 12px;
+}
+
+.brand > span,
+.departmentIdentity > span,
+.editorTopbar > div,
+.patientStrip span,
+.documentTimeline header,
+.documentEditor > header > div,
+.handoffFields > section > header > div,
+.sourceDrawer header > span {
+  display: grid;
+}
+
+.brandMark {
+  position: relative;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  color: var(--ink-950);
+  background: #f0c766;
+  border-radius: 50%;
+}
+
+.brandMark svg {
+  width: 21px;
+}
+
+.brandMark i {
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  width: 9px;
+  height: 9px;
+  background: var(--signal);
+  border: 2px solid var(--ink-950);
+  border-radius: 50%;
+}
+
+.brand strong {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.09em;
+}
+
+.brand small {
+  color: rgba(255, 255, 255, 0.44);
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+}
+
+.departmentIdentity {
+  justify-self: center;
+  gap: 10px;
+  padding: 7px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.departmentIdentity > svg {
+  width: 18px;
+  color: #8cd0b2;
+}
+
+.departmentIdentity strong {
+  font-size: 12px;
+}
+
+.departmentIdentity small {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 8px;
+}
+
+.headerActions {
+  justify-self: end;
+  gap: 14px;
+  font-size: 10px;
+}
+
+.headerActions > span {
+  padding: 8px 11px;
+  color: var(--ink-950);
+  font-weight: 750;
+  background: #f5f0e4;
+}
+
+.headerActions a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+}
+
+.appShell {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  min-height: calc(100vh - 70px);
+}
+
+.moduleRail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  color: #f7f3e8;
+  background: var(--ink-900);
+  border-right: 1px solid var(--ink-950);
+}
+
+.moduleRail button {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-height: 118px;
+  padding: 20px 8px;
+  color: rgba(255, 255, 255, 0.48);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.moduleRail button::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  content: "";
+  background: transparent;
+}
+
+.moduleRail button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.moduleRail .activeModule {
+  color: var(--ink-950);
+  background: #f0c766;
+}
+
+.moduleRail .activeModule::before {
+  background: var(--signal);
+}
+
+.moduleRail button > svg {
+  width: 24px;
+  height: 24px;
+}
+
+.moduleRail button strong {
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.12em;
+}
+
+.moduleRail button small {
+  font-family: var(--font-data);
+  font-size: 8px;
+}
+
+.railClock {
+  display: grid;
+  gap: 3px;
+  margin-top: auto;
+  padding: 18px 8px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.railClock time {
+  color: #f0c766;
+  font-family: var(--font-data);
+  font-size: 14px;
+}
+
+.railClock span {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: var(--font-data);
+  font-size: 8px;
+}
+
+.mainPane {
+  min-width: 0;
+}
+
+.page {
+  max-width: 1600px;
+  min-height: calc(100vh - 70px);
+  margin: 0 auto;
+  padding: 0 clamp(22px, 3.5vw, 58px) 60px;
+}
+
+.pageHeader {
+  justify-content: space-between;
+  gap: 30px;
+  min-height: 196px;
+  padding: 38px 0 30px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.pageHeader > div:first-child > span {
+  color: var(--signal-dark);
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.pageHeader h1 {
+  margin: 8px 0 6px;
+  color: var(--ink-950);
+  font-family: var(--font-display);
+  font-size: clamp(44px, 5vw, 68px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.pageHeader p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pageActions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.primaryTopAction,
+.printTopAction,
+.secondaryTopAction {
+  gap: 10px;
+  min-height: 54px;
+  padding: 9px 14px;
+  font-weight: 750;
+  border: 0;
+  cursor: pointer;
+}
+
+.primaryTopAction {
+  min-width: 250px;
+  color: var(--ink-950);
+  text-align: left;
+  background: #f0c766;
+  box-shadow: 7px 7px 0 rgba(23, 60, 56, 0.14);
+}
+
+.primaryTopAction:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 9px 9px 0 rgba(23, 60, 56, 0.16);
+}
+
+.primaryTopAction svg,
+.printTopAction svg,
+.secondaryTopAction svg {
+  width: 18px;
+}
+
+.primaryTopAction > span,
+.printTopAction > span {
+  display: grid;
+}
+
+.primaryTopAction strong,
+.printTopAction strong {
+  font-size: 12px;
+}
+
+.primaryTopAction small,
+.printTopAction small {
+  font-size: 8px;
+  opacity: 0.62;
+}
+
+.secondaryTopAction {
+  color: var(--ink-900);
+  font-size: 10px;
+  background: #e7e1d4;
+  border: 1px solid var(--line-strong);
+}
+
+.printTopAction {
+  min-width: 178px;
+  color: #fff;
+  text-align: left;
+  background: var(--ink-800);
+}
+
+.primaryTopAction:disabled,
+.secondaryTopAction:disabled,
+.printTopAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.boardToolbar {
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 78px;
+}
+
+.searchBar {
+  gap: 8px;
+  width: min(340px, 100%);
+  min-height: 40px;
+  padding: 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.searchBar svg {
+  width: 15px;
+  color: var(--muted);
+}
+
+.searchBar input {
+  width: 100%;
+  color: var(--text);
+  font-size: 10px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.boardStats {
+  gap: 18px;
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 8px;
+}
+
+.boardStats span {
+  gap: 5px;
+}
+
+.boardStats svg {
+  width: 13px;
+  color: var(--success);
+}
+
+.patientGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 15px;
+}
+
+.patientCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 335px;
+  padding: 0;
+  overflow: hidden;
+  color: var(--text);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: 5px 5px 0 rgba(23, 60, 56, 0.06);
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.patientCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 8px 9px 0 rgba(23, 60, 56, 0.09);
+}
+
+.patientCard::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  content: "";
+  background: var(--signal);
+}
+
+.patientCard > header {
+  justify-content: space-between;
+  min-height: 54px;
+  padding: 10px 14px 10px 18px;
+  background: #ebe6da;
+  border-bottom: 1px solid var(--line);
+}
+
+.orderIndex {
+  color: var(--ink-700);
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.stageBadge,
+.reviewStatus,
+.reviewedStatus {
+  padding: 5px 7px;
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.stageBadge,
+.reviewStatus {
+  color: #8b5b08;
+  background: #f5dfa7;
+}
+
+.reviewedStatus {
+  color: var(--success);
+  background: #dcece4;
+}
+
+.reviewStatus,
+.reviewedStatus {
+  gap: 5px;
+}
+
+.reviewStatus svg,
+.reviewedStatus svg {
+  width: 12px;
+}
+
+.patientTitle {
+  gap: 12px;
+  padding: 18px 18px 8px;
+}
+
+.patientTitle > strong {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  color: var(--ink-950);
+  font-family: var(--font-data);
+  font-size: 15px;
+  background: #f0c766;
+}
+
+.patientTitle > span {
+  display: grid;
+}
+
+.patientTitle b {
+  color: var(--ink-950);
+  font-family: var(--font-display);
+  font-size: 24px;
+}
+
+.patientTitle small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.patientCard h2 {
+  min-height: 34px;
+  margin: 3px 18px 6px;
+  color: var(--ink-800);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.patientCard > p {
+  display: -webkit-box;
+  min-height: 44px;
+  margin: 0 18px 14px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.documentProgress {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px;
+  margin: auto 18px 14px;
+  padding: 10px 0 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.documentProgress > span:first-child {
+  display: grid;
+  gap: 1px;
+}
+
+.documentProgress small {
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px;
+}
+
+.documentProgress strong {
+  color: var(--ink-900);
+  font-size: 10px;
+}
+
+.progressCount {
+  color: var(--signal-dark);
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.continuousHint {
+  grid-column: 1 / -1;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+  letter-spacing: 0.04em;
+}
+
+.reviewSummary > i {
+  position: relative;
+  grid-column: 1 / -1;
+  height: 3px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.reviewSummary > i > b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--signal);
+}
+
+.patientCard > footer {
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 16px 0 18px;
+  background: var(--ink-900);
+}
+
+.patientCard > footer span,
+.patientCard > footer strong {
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 8px;
+}
+
+.patientCard > footer strong {
+  color: #f0c766;
+}
+
+.patientCard > footer svg {
+  width: 12px;
+}
+
+.editorPage,
+.handoffEditorPage {
+  min-height: calc(100vh - 70px);
+  background: var(--paper);
+}
+
+.editorTopbar {
+  display: grid;
+  grid-template-columns: 220px 1fr auto;
+  gap: 18px;
+  min-height: 96px;
+  padding: 14px 24px;
+  color: #f7f3e8;
+  background: var(--ink-900);
+}
+
+.backButton {
+  gap: 7px;
+  justify-self: start;
+  padding: 8px 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.backButton svg {
+  width: 14px;
+}
+
+.editorTopbar > div {
+  align-self: center;
+  justify-self: start;
+  grid-template-columns: auto auto;
+  column-gap: 8px;
+}
+
+.editorTopbar > div > span {
+  align-self: center;
+  padding: 3px 6px;
+  color: var(--ink-950);
+  font-family: var(--font-data);
+  font-size: 8px;
+  background: #f0c766;
+}
+
+.editorTopbar > div > strong {
+  font-family: var(--font-display);
+  font-size: 23px;
+}
+
+.editorTopbar > div > small {
+  grid-column: 1 / -1;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 9px;
+}
+
+.editorTopbar .primaryTopAction,
+.editorTopbar .printTopAction {
+  justify-self: end;
+}
+
+.editorShell {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  height: calc(100vh - 166px);
+}
+
+.documentTimeline {
+  overflow-y: auto;
+  background: #e8e2d6;
+  border-right: 1px solid var(--line-strong);
+}
+
+.documentTimeline > header {
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.documentTimeline > header > span {
+  display: grid;
+  gap: 2px;
+}
+
+.documentTimeline header small {
+  color: var(--signal-dark);
+  font-family: var(--font-data);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+}
+
+.documentTimeline header strong {
+  color: var(--ink-950);
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.documentRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  background: transparent;
+  border-bottom: 1px solid var(--line);
+  transition: background 140ms ease;
+}
+
+.documentRow:hover,
+.documentRow:focus-within {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.documentSelect {
+  width: 100%;
+  gap: 9px;
+  min-height: 62px;
+  padding: 10px 8px 10px 12px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.documentSelect > span:first-child {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  color: var(--surface);
+  font-family: var(--font-data);
+  font-size: 8px;
+  background: var(--ink-700);
+}
+
+.documentSelect > span:nth-child(2) {
+  min-width: 0;
+  gap: 2px;
+}
+
+.documentSelect strong {
+  overflow: hidden;
+  color: var(--ink-950);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.documentSelect small {
+  color: var(--success);
+  font-family: var(--font-data);
+  font-size: 7px;
+}
+
+.documentRowActions {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  align-self: center;
+  padding-right: 8px;
+  opacity: 0.45;
+  transition: opacity 140ms ease;
+}
+
+.documentRow:hover .documentRowActions,
+.documentRow:focus-within .documentRowActions {
+  opacity: 1;
+}
+
+.documentRowActions button {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  color: var(--ink-700);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.documentRowActions button:hover {
+  color: var(--ink-950);
+  background: var(--surface);
+  border-color: var(--ink-500);
+}
+
+.documentRowActions button:last-child:hover {
+  color: #a33625;
+  border-color: #c66c5a;
+}
+
+.documentRowActions svg {
+  width: 12px;
+}
+
+.documentRowActions .confirmDeleteButton {
+  width: auto;
+  color: #fff;
+  font-size: 7px;
+  font-weight: 800;
+  white-space: nowrap;
+  background: #a94432;
+  border-color: #a94432;
+}
+
+.documentRowActions .confirmDeleteButton:hover {
+  color: #fff;
+  background: #853323;
+  border-color: #853323;
+}
+
+.titleEditor {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 5px;
+  padding: 0 10px 10px 48px;
+}
+
+.titleEditor input {
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  color: var(--ink-950);
+  font-size: 9px;
+  background: var(--surface);
+  border: 1px solid var(--signal);
+  outline: 0;
+}
+
+.titleEditor input:focus {
+  box-shadow: 0 0 0 2px rgba(224, 95, 59, 0.16);
+}
+
+.titleEditor button {
+  gap: 4px;
+  height: 30px;
+  padding: 0 8px;
+  color: var(--ink-800);
+  font-size: 7px;
+  font-weight: 800;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+}
+
+.titleEditor button:first-of-type {
+  color: #fff;
+  background: var(--ink-800);
+  border-color: var(--ink-800);
+}
+
+.titleEditor svg {
+  width: 11px;
+}
+
+.documentTimeline .activeDocument {
+  background: var(--surface);
+  box-shadow: inset 4px 0 var(--signal);
+}
+
+.documentTimeline .activeDocument .documentSelect > span:first-child {
+  color: var(--ink-950);
+  background: #f0c766;
+}
+
+.documentTimeline .futureDocument .documentSelect {
+  opacity: 0.52;
+}
+
+.documentTimeline .futureDocument small {
+  color: var(--muted);
+}
+
+.addDocumentButton {
+  flex: 0 0 auto;
+  gap: 5px;
+  min-height: 30px;
+  padding: 6px 8px;
+  color: var(--surface);
+  font-size: 8px;
+  font-weight: 800;
+  background: var(--ink-800);
+  border: 0;
+  cursor: pointer;
+}
+
+.addDocumentButton:hover {
+  background: var(--ink-950);
+}
+
+.addDocumentButton svg {
+  width: 12px;
+}
+
+.frameworkHint {
+  max-width: 520px;
+  padding: 5px 8px;
+  color: #6e5211;
+  font-family: var(--font-data);
+  font-size: 8px;
+  background: #f5e7bd;
+  border-left: 3px solid #d6a529;
+}
+
+.documentEditor {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  min-width: 0;
+  padding: 24px clamp(24px, 4vw, 70px) 18px;
+  overflow: hidden;
+}
+
+.documentEditor > header {
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 14px;
+}
+
+.documentEditor > header > div > span {
+  display: inline-flex;
+  grid-auto-flow: column;
+  justify-self: start;
+  gap: 6px;
+  color: var(--signal-dark);
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.documentEditor > header > div > span svg {
+  width: 13px;
+}
+
+.documentEditor h1 {
+  margin: 5px 0 2px;
+  color: var(--ink-950);
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.documentEditor header p {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 8px;
+}
+
+.savedDocument,
+.pendingDocument {
+  padding: 6px 8px;
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.savedDocument {
+  color: var(--success);
+  background: #dcece4;
+}
+
+.pendingDocument {
+  color: #8b5b08;
+  background: #f5dfa7;
+}
+
+.patientStrip {
+  display: grid;
+  grid-template-columns: 0.8fr 0.6fr 0.7fr 1.5fr 0.7fr;
+  background: #e8e3d7;
+  border: 1px solid var(--line-strong);
+}
+
+.patientStrip span {
+  gap: 3px;
+  padding: 8px 10px;
+  border-right: 1px solid var(--line);
+}
+
+.patientStrip span:last-child {
+  border-right: 0;
+}
+
+.patientStrip small {
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px;
+}
+
+.patientStrip strong {
+  color: var(--ink-950);
+  font-size: 10px;
+}
+
+.documentEditor > textarea {
+  width: 100%;
+  min-height: 0;
+  padding: 26px 30px;
+  resize: none;
+  color: #222b28;
+  font-family: "Kaiti SC", "STKaiti", var(--font-body);
+  font-size: 14px;
+  line-height: 2;
+  background: #fffefa;
+  border: 1px solid var(--line-strong);
+  border-top: 0;
+  outline: 0;
+}
+
+.documentEditor > textarea:focus {
+  box-shadow: inset 0 0 0 2px rgba(47, 102, 94, 0.16);
+}
+
+.documentEditor > footer {
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-top: 0;
+}
+
+.documentEditor > footer span {
+  gap: 5px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.documentEditor > footer svg {
+  width: 13px;
+  color: var(--success);
+}
+
+.documentEditor > footer div {
+  gap: 12px;
+}
+
+.documentEditor > footer small {
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 8px;
+}
+
+.documentEditor > footer button {
+  gap: 6px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 750;
+  background: var(--ink-800);
+  border: 0;
+  cursor: pointer;
+}
+
+.handoffEmpty {
+  display: grid;
+  place-items: center;
+  max-width: 650px;
+  margin: 65px auto 0;
+  padding: 52px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: 10px 10px 0 rgba(23, 60, 56, 0.08);
+}
+
+.handoffEmpty > span {
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  color: #f0c766;
+  background: var(--ink-900);
+  border-radius: 50%;
+}
+
+.handoffEmpty > span svg {
+  width: 30px;
+}
+
+.handoffEmpty > small {
+  margin-top: 18px;
+  color: var(--signal-dark);
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+.handoffEmpty h2 {
+  margin: 7px 0;
+  color: var(--ink-950);
+  font-family: var(--font-display);
+  font-size: 30px;
+}
+
+.handoffEmpty p {
+  max-width: 470px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.handoffEmpty > button {
+  gap: 8px;
+  margin-top: 24px;
+  padding: 12px 17px;
+  color: var(--ink-950);
+  font-size: 11px;
+  font-weight: 800;
+  background: #f0c766;
+  border: 0;
+  cursor: pointer;
+}
+
+.handoffEmpty > button svg {
+  width: 16px;
+}
+
+.reviewSummary {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  gap: 5px;
+  min-width: 260px;
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 8px;
+}
+
+.reviewSummary > span {
+  color: var(--signal-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.reviewSummary > i {
+  grid-column: 1 / -1;
+}
+
+.handoffCard > p {
+  -webkit-line-clamp: 3;
+  min-height: 60px;
+}
+
+.handoffEditorShell {
+  display: grid;
+  grid-template-columns: minmax(270px, 0.72fr) minmax(560px, 1.7fr);
+  height: calc(100vh - 166px);
+}
+
+.handoffPatientInfo {
+  position: relative;
+  padding: 38px 28px;
+  overflow: hidden;
+  color: #f7f3e8;
+  background: var(--ink-900);
+}
+
+.largeOrder {
+  position: absolute;
+  right: -7px;
+  top: -25px;
+  color: rgba(255, 255, 255, 0.055);
+  font-family: var(--font-display);
+  font-size: 150px;
+  font-weight: 800;
+}
+
+.handoffPatientInfo > small {
+  color: #f0c766;
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.handoffPatientInfo h2 {
+  margin: 10px 0 3px;
+  font-family: var(--font-display);
+  font-size: 34px;
+}
+
+.handoffPatientInfo > p {
+  margin: 0;
+  color: #b9d6ca;
+  font-size: 12px;
+}
+
+.handoffPatientInfo dl {
+  margin: 30px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.handoffPatientInfo dl > div {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.handoffPatientInfo dt {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 8px;
+}
+
+.handoffPatientInfo dd {
+  margin: 0;
+  font-size: 9px;
+}
+
+.paragraphPreview {
+  margin-top: 28px;
+  padding: 15px;
+  color: var(--ink-950);
+  background: #f0c766;
+}
+
+.paragraphPreview small {
+  font-family: var(--font-data);
+  font-size: 7px;
+  font-weight: 750;
+}
+
+.paragraphPreview p {
+  margin: 7px 0 0;
+  font-size: 9px;
+  line-height: 1.75;
+}
+
+.handoffForm {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.handoffForm > header {
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 0 22px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.handoffForm > header > span {
+  gap: 6px;
+  color: var(--ink-950);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.handoffForm > header svg {
+  width: 14px;
+}
+
+.handoffFields {
+  display: grid;
+  gap: 10px;
+  padding: 18px 22px 30px;
+  overflow-y: auto;
+}
+
+.handoffFields > section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.handoffFields > section > header {
+  gap: 9px;
+  padding: 9px 11px 6px;
+}
+
+.handoffFields > section > header > span {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  color: #fff;
+  font-family: var(--font-data);
+  font-size: 8px;
+  background: var(--ink-800);
+}
+
+.handoffFields > section > header strong {
+  color: var(--ink-950);
+  font-size: 10px;
+}
+
+.handoffFields > section > header small {
+  color: var(--muted);
+  font-size: 7px;
+}
+
+.handoffFields > section > header em {
+  margin-left: auto;
+  padding: 4px 6px;
+  color: #8b5b08;
+  font-family: var(--font-data);
+  font-size: 7px;
+  font-style: normal;
+  background: #f5dfa7;
+}
+
+.handoffFields > section > textarea {
+  display: block;
+  width: calc(100% - 22px);
+  min-height: 62px;
+  margin: 0 11px 9px;
+  padding: 9px 10px;
+  resize: vertical;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.65;
+  background: #f6f3eb;
+  border: 1px solid transparent;
+  outline: 0;
+}
+
+.handoffFields > section > textarea:focus {
+  background: #fff;
+  border-color: var(--ink-700);
+}
+
+.handoffFields .emptyHandoffField {
+  border-style: dashed;
+  border-color: #d7a249;
+}
+
+.handoffFields .emptyHandoffField > header > span,
+.handoffFields .supplementBlock > header > span {
+  color: #744c08;
+  background: #f0c766;
+}
+
+.evidenceRow {
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 0 11px 9px;
+}
+
+.evidenceRow small {
+  margin-right: 3px;
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px;
+}
+
+.evidenceRow button {
+  padding: 3px 6px;
+  color: var(--ink-800);
+  font-family: var(--font-data);
+  font-size: 7px;
+  font-weight: 750;
+  background: #e2eee7;
+  border: 1px solid #bdd0c5;
+  cursor: pointer;
+}
+
+.handoffFields .supplementBlock {
+  border: 1px solid #d7a249;
+}
+
+.reviewFooter {
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 62px;
+  padding: 9px 18px;
+  background: var(--surface);
+  border-top: 1px solid var(--line-strong);
+}
+
+.reviewFooter > span {
+  gap: 6px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.reviewFooter > span svg {
+  width: 14px;
+  color: var(--success);
+}
+
+.reviewFooter button {
+  gap: 6px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  background: var(--ink-800);
+  border: 0;
+  cursor: pointer;
+}
+
+.reviewFooter button svg {
+  width: 15px;
+}
+
+.sourceDrawer {
+  position: fixed;
+  z-index: 50;
+  right: 22px;
+  bottom: 22px;
+  width: min(510px, calc(100vw - 44px));
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 24px 70px rgba(16, 42, 39, 0.25);
+}
+
+.sourceDrawer header {
+  justify-content: space-between;
+  padding: 12px 14px;
+  color: #fff;
+  background: var(--ink-900);
+}
+
+.sourceDrawer header small {
+  color: #b9d6ca;
+  font-family: var(--font-data);
+  font-size: 7px;
+}
+
+.sourceDrawer header strong {
+  font-size: 11px;
+}
+
+.sourceDrawer header button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 0;
+  cursor: pointer;
+}
+
+.sourceDrawer header svg {
+  width: 14px;
+}
+
+.sourceMeta {
+  gap: 10px;
+  padding: 7px 14px;
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+.sourceDrawer > p {
+  margin: 0;
+  padding: 16px;
+  font-size: 11px;
+  line-height: 1.9;
+}
+
+.sourceDrawer mark {
+  padding: 1px 2px;
+  color: inherit;
+  background: #f5d36f;
+}
+
+.notice {
+  position: fixed;
+  z-index: 60;
+  top: 82px;
+  right: 20px;
+  gap: 8px;
+  max-width: min(480px, calc(100vw - 40px));
+  padding: 11px 13px;
+  color: #fff;
+  font-size: 9px;
+  background: var(--ink-800);
+  box-shadow: 0 14px 34px rgba(16, 42, 39, 0.24);
+}
+
+.notice > svg {
+  flex: 0 0 auto;
+  width: 15px;
+  color: #f0c766;
+}
+
+.notice button {
+  display: grid;
+  place-items: center;
+  margin-left: 5px;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.notice button svg {
+  width: 13px;
+}
+
+.printBoard {
+  display: none;
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1180px) {
+  .patientGrid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+
+  .boardStats {
+    display: none;
+  }
+
+  .departmentIdentity {
+    display: none;
+  }
+
+  .appHeader {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .handoffEditorShell {
+    grid-template-columns: 280px minmax(500px, 1fr);
+  }
+}
+
+@media (max-width: 820px) {
+  .appHeader {
+    padding: 8px 14px;
+  }
+
+  .headerActions a,
+  .headerActions > span {
+    display: none;
+  }
+
+  .appShell {
+    display: block;
+  }
+
+  .moduleRail {
+    position: sticky;
+    z-index: 9;
+    top: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .moduleRail button {
+    min-height: 66px;
+    grid-template-columns: auto auto auto;
+    justify-content: center;
+    gap: 7px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .moduleRail button > svg {
+    width: 18px;
+  }
+
+  .railClock {
+    display: none;
+  }
+
+  .page {
+    padding: 0 14px 40px;
+  }
+
+  .pageHeader {
+    display: grid;
+    min-height: 0;
+    padding: 28px 0 22px;
+  }
+
+  .pageHeader h1 {
+    font-size: 42px;
+  }
+
+  .pageActions {
+    justify-content: stretch;
+  }
+
+  .pageActions > button {
+    flex: 1;
+  }
+
+  .boardToolbar {
+    min-height: 66px;
+  }
+
+  .patientGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .editorTopbar {
+    grid-template-columns: 1fr auto;
+    padding: 10px 12px;
+  }
+
+  .editorTopbar > div {
+    display: none;
+  }
+
+  .editorShell,
+  .handoffEditorShell {
+    display: block;
+    height: auto;
+  }
+
+  .documentTimeline {
+    max-height: 310px;
+  }
+
+  .documentEditor {
+    min-height: 750px;
+    padding: 18px 12px;
+  }
+
+  .patientStrip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .patientStrip span {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .handoffPatientInfo {
+    min-height: 360px;
+  }
+
+  .handoffForm {
+    min-height: 800px;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 13mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .screenApp {
+    display: none !important;
+  }
+
+  .printBoard {
+    display: block;
+    color: #111;
+    font-family: "Songti SC", "STSong", serif;
+  }
+
+  .printBoard > header {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding-bottom: 4mm;
+    border-bottom: 1.5pt solid #111;
+  }
+
+  .printBoard > header span {
+    font-size: 9pt;
+  }
+
+  .printBoard > header h1 {
+    margin: 0;
+    font-size: 20pt;
+    letter-spacing: 0.1em;
+  }
+
+  .printBoard > header p {
+    width: 100%;
+    margin: 2mm 0 0;
+    text-align: right;
+    font-size: 8pt;
+  }
+
+  .printList {
+    padding-top: 3mm;
+  }
+
+  .printList article {
+    padding: 3.5mm 0;
+    break-inside: avoid;
+    border-bottom: 0.6pt solid #777;
+  }
+
+  .printList article > div {
+    gap: 3mm;
+  }
+
+  .printList article > div > span {
+    display: grid;
+    place-items: center;
+    width: 7mm;
+    height: 7mm;
+    color: #fff;
+    font-family: monospace;
+    font-size: 7pt;
+    background: #173c38;
+  }
+
+  .printList article > div > strong {
+    font-size: 10pt;
+  }
+
+  .printList article > div > small {
+    margin-left: auto;
+    font-size: 7.5pt;
+  }
+
+  .printList article > p {
+    margin: 2mm 0 0 10mm;
+    font-size: 9pt;
+    line-height: 1.7;
+    text-align: justify;
+  }
+
+  .printBoard > footer {
+    justify-content: space-between;
+    padding-top: 7mm;
+    font-size: 8pt;
+  }
+}

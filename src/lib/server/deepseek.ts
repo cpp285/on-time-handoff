@@ -117,7 +117,7 @@ export async function generateDraft(
               content: [{ type: "input_text", text: buildInput(context) }],
             },
           ],
-          thinking: { type: "disabled" },
+          reasoning: { effort: "none" },
           max_output_tokens: 4_000,
           text: {
             format: {

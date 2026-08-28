@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "准点交班｜病区电子交班工作台",
-  description: "AI 整理、医生核对、可追溯的病区电子交班演示系统。",
+  title: "准点交班｜口腔颌面头颈肿瘤科",
+  description: "病史写完一键生成全病区交班，逐人核对后统一打印。",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

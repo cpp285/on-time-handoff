@@ -6,7 +6,7 @@ export default function Loading() {
         background: "#f4f1e8",
         padding: "96px 6vw",
       }}
-      aria-label="正在加载病区交班看板"
+      aria-label="正在加载电子病历交班工作台"
     >
       <div
         style={{
@@ -26,10 +26,10 @@ export default function Loading() {
             marginTop: 40,
           }}
         >
-          {Array.from({ length: 6 }, (_, index) => (
+          {Array.from({ length: 3 }, (_, index) => (
             <div
               key={index}
-              style={{ height: 280, background: "#fffdf8", border: "1px solid #d8d4c8" }}
+              style={{ height: 560, background: "#fffdf8", border: "1px solid #d8d4c8" }}
             />
           ))}
         </div>

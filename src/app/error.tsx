@@ -24,7 +24,7 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
       >
         <AlertTriangle size={34} color="#b84939" aria-hidden="true" />
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: 32 }}>
-          交班看板暂时无法读取
+          交班工作台暂时无法读取
         </h1>
         <p style={{ color: "#66716d", lineHeight: 1.8 }}>
           本地数据没有丢失。请重新读取，如果问题持续出现，请保留终端报错用于排查。
