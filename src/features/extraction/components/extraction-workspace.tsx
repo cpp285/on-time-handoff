@@ -9,11 +9,15 @@ import {
   ChevronRight,
   ClipboardList,
   Clock3,
+  Database,
+  ExternalLink,
   FileCheck2,
+  Files,
   LoaderCircle,
   PenLine,
   Plus,
   Printer,
+  RefreshCw,
   Save,
   Search,
   ShieldCheck,
@@ -39,7 +43,8 @@ import type {
 } from "../types";
 import styles from "./extraction-workspace.module.css";
 
-type MainModule = "history" | "handoff";
+type MainModule = "history" | "sync" | "handoff";
+type WorkspaceExperience = "emr" | "handoff";
 
 interface HandoffEditorState {
   result: ExtractionResult;
@@ -50,6 +55,7 @@ interface HandoffEditorState {
 
 interface ExtractionWorkspaceProps {
   initialCharts: SourceSystemChart[];
+  experience?: WorkspaceExperience;
 }
 
 function formatDate(value: string | null) {
@@ -94,9 +100,15 @@ function HighlightedSource({ content, quote }: { content: string; quote: string 
   );
 }
 
-export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps) {
+export function ExtractionWorkspace({
+  initialCharts,
+  experience = "emr",
+}: ExtractionWorkspaceProps) {
+  const isEmr = experience === "emr";
   const [charts, setCharts] = useState(initialCharts);
-  const [module, setModule] = useState<MainModule>("history");
+  const [module, setModule] = useState<MainModule>(
+    isEmr ? "history" : "sync",
+  );
   const [search, setSearch] = useState("");
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
   const [selectedDocumentKey, setSelectedDocumentKey] =
@@ -104,6 +116,8 @@ export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps)
   const [selectedHandoffId, setSelectedHandoffId] = useState<string | null>(null);
   const [handoffs, setHandoffs] = useState<Record<string, HandoffEditorState>>({});
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState("08月29日 18:42");
   const [notice, setNotice] = useState<string | null>(null);
   const [activeEvidence, setActiveEvidence] = useState<{
     patientId: string;
@@ -155,6 +169,22 @@ export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps)
     setSelectedHistoryId(null);
     setSelectedHandoffId(null);
     setActiveEvidence(null);
+  }
+
+  async function syncLatestData() {
+    setIsSyncing(true);
+    setNotice(null);
+    await new Promise((resolve) => setTimeout(resolve, 850));
+    const time = new Intl.DateTimeFormat("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date());
+    setLastSyncedAt(time.replaceAll("/", "月").replace(",", "日"));
+    setIsSyncing(false);
+    setNotice(`已同步口腔颌面头颈肿瘤科 ${charts.length} 位演示患者的最新资料。`);
   }
 
   function updateDocument(content: string) {
@@ -437,51 +467,71 @@ export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps)
         <header className={styles.appHeader}>
           <div className={styles.brand}>
             <span className={styles.brandMark} aria-hidden="true">
-              <Clock3 />
+              {isEmr ? <BookOpenText /> : <Clock3 />}
               <i />
             </span>
             <span>
-              <strong>准点交班</strong>
-              <small>EMR HANDOFF ASSIST</small>
+              <strong>{isEmr ? "院内电子病历" : "准点交班"}</strong>
+              <small>{isEmr ? "HOSPITAL EMR" : "HANDOFF ASSIST"}</small>
             </span>
           </div>
           <div className={styles.departmentIdentity}>
             <Stethoscope aria-hidden="true" />
             <span>
               <strong>口腔颌面头颈肿瘤科</strong>
-              <small>住院医生工作站 · 5位虚构患者</small>
+              <small>{isEmr ? "住院医生工作站 · 病历书写" : "院内侧边应用 · 只读同步"}</small>
             </span>
           </div>
           <div className={styles.headerActions}>
             <span>沈医生 · 白班</span>
-            <Link href="/board">旧版实验看板</Link>
+            <Link href={isEmr ? "/handoff" : "/"}>
+              {isEmr ? "打开交班助手" : "返回电子病历"}
+              <ExternalLink />
+            </Link>
           </div>
         </header>
 
         <div className={styles.appShell}>
-          <nav className={styles.moduleRail} aria-label="主要功能">
-            <button
-              type="button"
-              className={module === "history" ? styles.activeModule : ""}
-              onClick={() => switchModule("history")}
-            >
-              <BookOpenText aria-hidden="true" />
-              <strong>病史</strong>
-              <small>{charts.length} 人</small>
-            </button>
-            <button
-              type="button"
-              className={module === "handoff" ? styles.activeModule : ""}
-              onClick={() => switchModule("handoff")}
-            >
-              <ClipboardList aria-hidden="true" />
-              <strong>交班</strong>
-              <small>
-                {Object.keys(handoffs).length
-                  ? `${reviewedCount}/${Object.keys(handoffs).length}`
-                  : "待生成"}
-              </small>
-            </button>
+          <nav
+            className={`${styles.moduleRail} ${isEmr ? styles.singleModuleRail : ""}`}
+            aria-label="主要功能"
+          >
+            {isEmr ? (
+              <button
+                type="button"
+                className={module === "history" ? styles.activeModule : ""}
+                onClick={() => switchModule("history")}
+              >
+                <BookOpenText aria-hidden="true" />
+                <strong>病历管理</strong>
+                <small>{charts.length} 人</small>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className={module === "sync" ? styles.activeModule : ""}
+                  onClick={() => switchModule("sync")}
+                >
+                  <Database aria-hidden="true" />
+                  <strong>资料同步</strong>
+                  <small>已连接</small>
+                </button>
+                <button
+                  type="button"
+                  className={module === "handoff" ? styles.activeModule : ""}
+                  onClick={() => switchModule("handoff")}
+                >
+                  <ClipboardList aria-hidden="true" />
+                  <strong>交班管理</strong>
+                  <small>
+                    {Object.keys(handoffs).length
+                      ? `${reviewedCount}/${Object.keys(handoffs).length}`
+                      : "待生成"}
+                  </small>
+                </button>
+              </>
+            )}
             <div className={styles.railClock}>
               <time>18:45</time>
               <span>08.29</span>
@@ -489,39 +539,31 @@ export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps)
           </nav>
 
           <section className={styles.mainPane}>
-            {module === "history" && !selectedHistory && (
+            {isEmr && module === "history" && !selectedHistory && (
               <PatientBoard
-                title="病史工作台"
+                title="住院病历工作台"
                 eyebrow="MEDICAL RECORDS"
-                description="先完成病历书写，再从已保存资料自动整理全病区交班。"
+                description="在院内电子病历中完成患者文书，交班整理由独立的准点交班助手完成。"
                 charts={visibleCharts}
                 search={search}
                 onSearch={setSearch}
                 onOpen={openHistory}
                 action={
-                  <button
-                    type="button"
+                  <Link
+                    href="/handoff"
                     className={styles.primaryTopAction}
-                    onClick={generateAllHandoffs}
-                    disabled={isGenerating}
                   >
-                    {isGenerating ? (
-                      <LoaderCircle className={styles.spin} />
-                    ) : (
-                      <Sparkles />
-                    )}
+                    <ExternalLink />
                     <span>
-                      <strong>
-                        {isGenerating ? "正在整理全病区" : "一键生成全病区交班"}
-                      </strong>
-                      <small>按床位顺序 · 无需复制粘贴</small>
+                      <strong>打开准点交班助手</strong>
+                      <small>独立院内应用 · 只读同步</small>
                     </span>
-                  </button>
+                  </Link>
                 }
               />
             )}
 
-            {module === "history" && selectedHistory && selectedDocument && (
+            {isEmr && module === "history" && selectedHistory && selectedDocument && (
               <HistoryEditor
                 chart={selectedHistory}
                 selectedKey={selectedDocument.key}
@@ -536,12 +578,21 @@ export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps)
                   deleteDocument(selectedHistory.patient.id, key)
                 }
                 onSave={() => setNotice(`${selectedDocument.title}已在演示工作台保存。`)}
-                onGenerate={generateAllHandoffs}
-                isGenerating={isGenerating}
               />
             )}
 
-            {module === "handoff" && !selectedHandoff && (
+            {!isEmr && module === "sync" && (
+              <SyncDashboard
+                charts={orderedCharts}
+                lastSyncedAt={lastSyncedAt}
+                isSyncing={isSyncing}
+                isGenerating={isGenerating}
+                onSync={syncLatestData}
+                onGenerate={generateAllHandoffs}
+              />
+            )}
+
+            {!isEmr && module === "handoff" && !selectedHandoff && (
               <HandoffBoard
                 charts={visibleCharts}
                 handoffs={handoffs}
@@ -554,7 +605,7 @@ export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps)
               />
             )}
 
-            {module === "handoff" && selectedHandoff && selectedHandoffId && (
+            {!isEmr && module === "handoff" && selectedHandoff && selectedHandoffId && (
               <HandoffEditor
                 editor={selectedHandoff}
                 onBack={() => setSelectedHandoffId(null)}
@@ -614,7 +665,7 @@ export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps)
         )}
       </main>
 
-      <section className={styles.printBoard}>
+      {!isEmr && <section className={styles.printBoard}>
         <header>
           <span>口腔颌面头颈肿瘤科</span>
           <h1>病区交班记录</h1>
@@ -644,7 +695,7 @@ export function ExtractionWorkspace({ initialCharts }: ExtractionWorkspaceProps)
           <span>接班医生签名：________________</span>
           <span>打印时间：________________</span>
         </footer>
-      </section>
+      </section>}
     </>
   );
 }
@@ -766,6 +817,107 @@ function PatientBoard({
   );
 }
 
+function SyncDashboard({
+  charts,
+  lastSyncedAt,
+  isSyncing,
+  isGenerating,
+  onSync,
+  onGenerate,
+}: {
+  charts: SourceSystemChart[];
+  lastSyncedAt: string;
+  isSyncing: boolean;
+  isGenerating: boolean;
+  onSync: () => void;
+  onGenerate: () => void;
+}) {
+  const documentCount = charts.reduce(
+    (total, chart) =>
+      total + chart.documents.filter((item) => item.status !== "not_started").length,
+    0,
+  );
+  const sourceCount = charts.reduce(
+    (total, chart) => total + chart.records.length,
+    0,
+  );
+  const pendingCount = charts.reduce(
+    (total, chart) =>
+      total + chart.records.filter((record) => /(待|未回|检测中|未取材)/.test(record.content)).length,
+    0,
+  );
+
+  return (
+    <div className={`${styles.page} ${styles.syncPage}`}>
+      <PageHeader
+        eyebrow="READ-ONLY EMR CONNECTOR"
+        title="病区资料同步"
+        description="从院内电子病历读取已书写文书、今日医嘱和检验检查状态，医生无需再次录入。"
+      >
+        <button
+          type="button"
+          className={styles.secondaryTopAction}
+          onClick={onSync}
+          disabled={isSyncing || isGenerating}
+        >
+          <RefreshCw className={isSyncing ? styles.spin : ""} />
+          {isSyncing ? "正在同步" : "同步最新资料"}
+        </button>
+        <button
+          type="button"
+          className={styles.primaryTopAction}
+          onClick={onGenerate}
+          disabled={isSyncing || isGenerating}
+        >
+          {isGenerating ? <LoaderCircle className={styles.spin} /> : <Sparkles />}
+          <span>
+            <strong>{isGenerating ? "正在生成全病区交班" : "一键生成全病区交班"}</strong>
+            <small>按床位顺序 · 无需复制粘贴</small>
+          </span>
+        </button>
+      </PageHeader>
+
+      <section className={styles.syncStatusBar}>
+        <div>
+          <span className={styles.liveDot} />
+          <strong>院内数据接口已连接</strong>
+          <small>只读权限 · 不回写 EMR</small>
+        </div>
+        <span>最后同步：{lastSyncedAt}</span>
+      </section>
+
+      <section className={styles.syncMetrics}>
+        <article><Users /><span><small>已同步患者</small><strong>{charts.length}</strong></span></article>
+        <article><Files /><span><small>已写病历</small><strong>{documentCount}</strong></span></article>
+        <article><Database /><span><small>今日资料</small><strong>{sourceCount}</strong></span></article>
+        <article><Clock3 /><span><small>待回结果</small><strong>{pendingCount}</strong></span></article>
+      </section>
+
+      <section className={styles.syncedPatientSection}>
+        <header>
+          <div><small>SYNC MANIFEST</small><h2>口腔颌面头颈肿瘤科 · 同步清单</h2></div>
+          <span><CheckCircle2 /> {charts.length}/{charts.length} 同步成功</span>
+        </header>
+        <div className={styles.syncedPatientList}>
+          {charts.map((chart) => (
+            <article key={chart.patient.id}>
+              <span className={styles.syncOrder}>{String(chart.patient.wardOrder).padStart(2, "0")}</span>
+              <div><strong>{chart.patient.bedNo}床 · {chart.patient.name}</strong><small>{chart.patient.gender} / {chart.patient.age}岁 · {chart.patient.encounterId}</small></div>
+              <div><strong>{chart.patient.diagnosis}</strong><small>{chart.patient.stageLabel}</small></div>
+              <span>{chart.documents.filter((item) => item.status !== "not_started").length} 篇病历 · {chart.records.length} 条今日资料</span>
+              <b><Check /> 已同步</b>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <span><ShieldCheck /> 虚构数据演示；正式环境应部署于医院内网。</span>
+          <Link href="/"><ExternalLink /> 返回电子病历查看原文</Link>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
 function HistoryEditor({
   chart,
   selectedKey,
@@ -776,8 +928,6 @@ function HistoryEditor({
   onRename,
   onDelete,
   onSave,
-  onGenerate,
-  isGenerating,
 }: {
   chart: SourceSystemChart;
   selectedKey: MedicalDocumentKey;
@@ -788,8 +938,6 @@ function HistoryEditor({
   onRename: (key: MedicalDocumentKey, title: string) => void;
   onDelete: (key: MedicalDocumentKey) => void;
   onSave: () => void;
-  onGenerate: () => void;
-  isGenerating: boolean;
 }) {
   const document = chart.documents.find((item) => item.key === selectedKey)!;
   const [renamingKey, setRenamingKey] = useState<MedicalDocumentKey | null>(null);
@@ -830,18 +978,16 @@ function HistoryEditor({
           <strong>{chart.patient.name}</strong>
           <small>{chart.patient.gender} / {chart.patient.age}岁 · {chart.patient.diagnosis}</small>
         </div>
-        <button
-          type="button"
+        <Link
+          href="/handoff"
           className={styles.primaryTopAction}
-          onClick={onGenerate}
-          disabled={isGenerating}
         >
-          {isGenerating ? <LoaderCircle className={styles.spin} /> : <Sparkles />}
+          <ExternalLink />
           <span>
-            <strong>{isGenerating ? "正在生成" : "一键生成全病区交班"}</strong>
-            <small>读取全部患者已保存病历</small>
+            <strong>打开准点交班助手</strong>
+            <small>只读同步全病区已保存病历</small>
           </span>
-        </button>
+        </Link>
       </header>
       <div className={styles.editorShell}>
         <aside className={styles.documentTimeline}>
@@ -1015,7 +1161,7 @@ function HandoffBoard({
       <PageHeader
         eyebrow="HANDOFF RECORDS"
         title="交班记录"
-        description="患者顺序与病史列表一致。逐人核对后，统一整理为连续段落打印。"
+        description="患者顺序与本次同步清单一致。逐人核对后，统一整理为连续段落打印。"
       >
         <button
           type="button"
@@ -1044,8 +1190,8 @@ function HandoffBoard({
         <div className={styles.handoffEmpty}>
           <span><ClipboardList /></span>
           <small>STEP 02</small>
-          <h2>病史写完，不再手工摘抄</h2>
-          <p>系统将按 03、07、12、16、21 床的顺序读取已保存病历，生成五位患者的交班重点。</p>
+          <h2>同步完成，不再手工摘抄</h2>
+          <p>系统将按 03、07、12、16、21 床的顺序读取院内同步资料，生成五位患者的交班重点。</p>
           <button type="button" onClick={onGenerate} disabled={isGenerating}>
             {isGenerating ? <LoaderCircle className={styles.spin} /> : <Sparkles />}
             {isGenerating ? "正在整理五位患者" : "一键生成全病区交班"}

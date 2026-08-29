@@ -1,26 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --ink-950: #102a27;
-  --ink-900: #173c38;
-  --ink-800: #205049;
-  --ink-700: #2f665e;
-  --paper: #f4f1e8;
-  --paper-warm: #ebe5d7;
-  --surface: #fffdf8;
+  --ink-950: #1f2937;
+  --ink-900: #253858;
+  --ink-800: #2f6fed;
+  --ink-700: #5688e8;
+  --paper: #f5f7fb;
+  --paper-warm: #eef3fa;
+  --surface: #ffffff;
   --surface-strong: #ffffff;
-  --line: #d8d4c8;
-  --line-strong: #b9b5a9;
-  --text: #17221f;
-  --muted: #66716d;
-  --muted-light: #8c9692;
-  --signal: #ee6b45;
-  --signal-dark: #b9452a;
-  --amber: #df9a2a;
-  --mint: #9bcdb9;
-  --success: #26765b;
-  --danger: #b84939;
-  --font-display: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  --line: #e6ebf2;
+  --line-strong: #d7deea;
+  --text: #273142;
+  --muted: #7a8598;
+  --muted-light: #a7b0bf;
+  --signal: #2f6fed;
+  --signal-dark: #245dcc;
+  --amber: #f5a623;
+  --mint: #dff5ed;
+  --success: #20a779;
+  --danger: #e05757;
+  --font-display: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-body: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-data: "SFMono-Regular", "Cascadia Code", "Roboto Mono", monospace;
 }

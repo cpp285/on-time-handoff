@@ -1,6 +1,6 @@
 import { ExtractionWorkspace } from "@/features/extraction/components/extraction-workspace";
 import { getDemoWorkspaceCharts } from "@/features/extraction/demo-source";
 
-export default function Home() {
-  return <ExtractionWorkspace initialCharts={getDemoWorkspaceCharts()} experience="emr" />;
+export default function HandoffPage() {
+  return <ExtractionWorkspace initialCharts={getDemoWorkspaceCharts()} experience="handoff" />;
 }
