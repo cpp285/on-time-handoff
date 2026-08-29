@@ -38,21 +38,16 @@ describe("single-patient extraction schema", () => {
 });
 
 describe("demo EMR adapter", () => {
-  it("provides seven oral surgery patients in a stable ward order", () => {
+  it("provides three presentation patients from distinct care stages", () => {
     const patients = getDemoPatientOptions();
-    expect(patients).toHaveLength(7);
-    expect(patients.map((patient) => patient.bedNo)).toEqual([
-      "03",
-      "05",
-      "07",
-      "09",
-      "12",
-      "16",
-      "21",
+    expect(patients).toHaveLength(3);
+    expect(patients.map((patient) => patient.bedNo)).toEqual(["03", "07", "12"]);
+    expect(patients.map((patient) => patient.wardOrder)).toEqual([1, 2, 3]);
+    expect(patients.map((patient) => patient.stageLabel)).toEqual([
+      "今日新入院",
+      "明日手术",
+      "手术当日",
     ]);
-    expect(
-      patients.filter((patient) => patient.stageLabel === "今日新入院"),
-    ).toHaveLength(3);
   });
 
   it("uses repeatable document templates and prefilled future frameworks", () => {
@@ -76,28 +71,9 @@ describe("demo EMR adapter", () => {
     });
     expect(currentTemplateKeys).toEqual([
       "first_progress",
-      "first_progress",
       "preoperative_discussion",
-      "first_progress",
       "first_postoperative_progress",
-      "postoperative_progress",
-      "postoperative_progress",
     ]);
-  });
-
-  it("supports a long stay with dozens of progress-note instances", () => {
-    const chart = getDemoWorkspaceCharts().find(
-      (item) => item.patient.id === "omfs-patient-16",
-    );
-    expect(chart).toBeDefined();
-    expect(
-      chart?.documents.filter((document) => document.status !== "not_started"),
-    ).toHaveLength(32);
-    expect(
-      chart?.documents.filter(
-        (document) => document.templateKey === "postoperative_progress",
-      ).length,
-    ).toBeGreaterThan(18);
   });
 
   it("classifies admission, latest-date and preoperative records separately", () => {

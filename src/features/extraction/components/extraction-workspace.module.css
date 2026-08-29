@@ -1280,8 +1280,9 @@
 
 .handoffForm {
   display: grid;
-  grid-template-rows: auto auto auto;
-  align-content: start;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+  min-height: calc(100vh - 166px);
   min-width: 0;
   background: #fff;
 }
@@ -1389,12 +1390,16 @@
 .handoffFields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(300px, 1fr);
   gap: 14px;
-  align-content: start;
+  align-content: stretch;
   padding: 18px 20px;
 }
 
 .handoffFields > section {
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 5px;
@@ -1473,8 +1478,9 @@
 
 .handoffFields > section > textarea {
   display: block;
+  flex: 1;
   width: calc(100% - 26px);
-  min-height: 118px;
+  min-height: 200px;
   margin: 0 13px 11px;
   padding: 12px 13px;
   resize: vertical;
@@ -1942,9 +1948,9 @@
 .patientCard {
   min-height: 154px;
   background: #fff;
-  border-color: var(--line);
-  border-radius: 5px;
-  box-shadow: 0 3px 12px rgba(42, 63, 95, 0.05);
+  border-color: #dfe6f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(42, 63, 95, 0.06);
 }
 
 .patientCard:hover {
@@ -1956,8 +1962,8 @@
 .patientCard > header {
   min-height: 42px;
   padding: 8px 13px 8px 16px;
-  background: #f8faff;
-  border-bottom-color: var(--line);
+  background: #fff;
+  border-bottom-color: #edf1f6;
 }
 
 .compactBedNo {
@@ -2000,8 +2006,19 @@
 }
 
 .orderIndex {
-  color: #fff;
-  background: var(--signal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 26px;
+  padding: 0 8px;
+  color: #4f6f9f;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  background: #fff;
+  border: 1px solid #d7e1ef;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(41, 79, 146, 0.06);
 }
 
 .stageBadge,
@@ -2045,12 +2062,14 @@
 
 .patientTitle > strong {
   color: var(--signal);
-  background: #edf4ff;
+  background: #fff;
+  border: 1px solid #d7e4f9;
+  border-radius: 6px;
 }
 
 .patientCard > footer {
-  background: #f8faff;
-  border-top: 1px solid var(--line);
+  background: #fff;
+  border-top: 1px solid #edf1f6;
 }
 
 .patientCard > footer span {
@@ -3043,6 +3062,11 @@
 
   .handoffForm {
     min-height: 800px;
+  }
+
+  .handoffFields {
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(280px, auto);
   }
 }
 

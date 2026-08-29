@@ -703,21 +703,40 @@ const encounters: DemoEncounter[] = [
   ),
 ];
 
+const presentationPatientIds = [
+  "omfs-patient-03",
+  "omfs-patient-07",
+  "omfs-patient-12",
+] as const;
+
+function getPresentationEncounters() {
+  return presentationPatientIds.map((patientId, index) => {
+    const encounter = encounters.find(
+      ({ patient }) => patient.id === patientId,
+    );
+    if (!encounter) {
+      throw new Error(`Missing demo encounter: ${patientId}`);
+    }
+    const clone = structuredClone(encounter);
+    clone.patient.wardOrder = index + 1;
+    return clone;
+  });
+}
+
 export function getDemoPatientOptions(): SourceSystemPatient[] {
-  return encounters
-    .map(({ patient }) => structuredClone(patient))
-    .sort((a, b) => a.wardOrder - b.wardOrder);
+  return getPresentationEncounters().map(({ patient }) => patient);
 }
 
 export function getDemoEncounter(patientId: string): DemoEncounter | null {
-  const encounter = encounters.find(({ patient }) => patient.id === patientId);
-  return encounter ? structuredClone(encounter) : null;
+  return (
+    getPresentationEncounters().find(
+      ({ patient }) => patient.id === patientId,
+    ) ?? null
+  );
 }
 
 export function getDemoWorkspaceCharts(): SourceSystemChart[] {
-  return encounters
-    .map(({ patient, records, documents }) =>
-      structuredClone({ patient, records, documents }),
-    )
-    .sort((a, b) => a.patient.wardOrder - b.patient.wardOrder);
+  return getPresentationEncounters().map(({ patient, records, documents }) =>
+    structuredClone({ patient, records, documents }),
+  );
 }

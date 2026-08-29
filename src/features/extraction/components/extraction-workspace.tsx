@@ -51,6 +51,9 @@ const CHARTS_STORAGE_KEY = "on-time-handoff:charts:v2";
 const HANDOFFS_STORAGE_KEY = "on-time-handoff:handoffs:v2";
 const CHANGED_PATIENTS_STORAGE_KEY = "on-time-handoff:changed-patients:v2";
 const CHANGED_SOURCES_STORAGE_KEY = "on-time-handoff:changed-sources:v2";
+// One-time cleanup for an accidental patient created during local UI testing.
+// Matching both bed number and name avoids touching legitimate user-created data.
+const LEGACY_QA_PATIENT_SIGNATURES = new Set(["50|傻小姐"]);
 
 interface HandoffEditorState {
   result: ExtractionResult;
@@ -109,6 +112,17 @@ function currentDocument(chart: SourceSystemChart) {
     chart.documents.find((document) => document.status === "current") ??
     chart.documents.findLast((document) => document.status === "completed") ??
     chart.documents[0]
+  );
+}
+
+function displayDiagnosis(diagnosis: string) {
+  const value = diagnosis.trim();
+  return value === "诊断待填写" ? "" : value;
+}
+
+function isLegacyQaPatient(chart: SourceSystemChart) {
+  return LEGACY_QA_PATIENT_SIGNATURES.has(
+    `${chart.patient.bedNo}|${chart.patient.name}`,
   );
 }
 
@@ -172,13 +186,14 @@ function createNewPatientChart(
 
 function handoffParagraph(editor: HandoffEditorState) {
   const patient = editor.result.patient;
+  const diagnosis = displayDiagnosis(patient.diagnosis);
   const details = [...editor.fields, ...editor.customFields]
     .filter((field) => field.value.trim())
     .map(
       (field) =>
         `${field.label}：${field.value.trim().replace(/[。；;]+$/, "")}`,
     );
-  return `${patient.bedNo}床 ${patient.name}，${patient.gender}，${patient.age}岁，${patient.diagnosis}。${details.join("；")}。`;
+  return `${patient.bedNo}床 ${patient.name}，${patient.gender}，${patient.age}岁${diagnosis ? `，${diagnosis}` : ""}。${details.join("；")}。`;
 }
 
 function HighlightedSource({ content, quote }: { content: string; quote: string }) {
@@ -264,6 +279,17 @@ export function ExtractionWorkspace({
   useEffect(() => {
     const hydrationTimer = window.setTimeout(() => {
       try {
+        const removedPatientIds = new Set<string>();
+        const presentationPatientIds = new Set(
+          initialCharts.map((chart) => chart.patient.id),
+        );
+        const retainedPatientIds = new Set(presentationPatientIds);
+        const wardOrderByPatientId = new Map(
+          initialCharts.map((chart) => [
+            chart.patient.id,
+            chart.patient.wardOrder,
+          ]),
+        );
         const savedCharts = window.localStorage.getItem(CHARTS_STORAGE_KEY);
         const savedHandoffs = window.localStorage.getItem(HANDOFFS_STORAGE_KEY);
         const savedChangedPatients = window.localStorage.getItem(
@@ -273,7 +299,37 @@ export function ExtractionWorkspace({
           CHANGED_SOURCES_STORAGE_KEY,
         );
         if (savedCharts) {
-          setCharts(JSON.parse(savedCharts) as SourceSystemChart[]);
+          const parsedCharts = JSON.parse(savedCharts) as SourceSystemChart[];
+          parsedCharts.forEach((chart) => {
+            const isRetiredBuiltInPatient =
+              chart.patient.id.startsWith("omfs-patient-") &&
+              !presentationPatientIds.has(chart.patient.id);
+            if (isLegacyQaPatient(chart) || isRetiredBuiltInPatient) {
+              removedPatientIds.add(chart.patient.id);
+            } else {
+              retainedPatientIds.add(chart.patient.id);
+            }
+          });
+          const retainedCharts = parsedCharts
+            .filter(
+              (chart) => !removedPatientIds.has(chart.patient.id),
+            )
+            .sort(
+              (a, b) =>
+                Number.parseInt(a.patient.bedNo, 10) -
+                Number.parseInt(b.patient.bedNo, 10),
+            )
+            .map((chart, index) => ({
+              ...chart,
+              patient: { ...chart.patient, wardOrder: index + 1 },
+            }));
+          retainedCharts.forEach((chart) => {
+            wardOrderByPatientId.set(
+              chart.patient.id,
+              chart.patient.wardOrder,
+            );
+          });
+          setCharts(retainedCharts);
         }
         if (savedHandoffs) {
           const parsed = JSON.parse(savedHandoffs) as Record<
@@ -282,24 +338,55 @@ export function ExtractionWorkspace({
           >;
           setHandoffs(
             Object.fromEntries(
-              Object.entries(parsed).map(([patientId, handoff]) => [
-                patientId,
-                {
-                  ...handoff,
-                  customFields: handoff.customFields ?? [],
-                  manuallyEditedFieldKeys:
-                    handoff.manuallyEditedFieldKeys ?? [],
-                },
-              ]),
+              Object.entries(parsed)
+                .filter(
+                  ([patientId]) =>
+                    retainedPatientIds.has(patientId) &&
+                    !removedPatientIds.has(patientId),
+                )
+                .map(([patientId, handoff]) => [
+                  patientId,
+                  {
+                    ...handoff,
+                    result: {
+                      ...handoff.result,
+                      patient: {
+                        ...handoff.result.patient,
+                        wardOrder:
+                          wardOrderByPatientId.get(patientId) ??
+                          handoff.result.patient.wardOrder,
+                      },
+                    },
+                    customFields: handoff.customFields ?? [],
+                    manuallyEditedFieldKeys:
+                      handoff.manuallyEditedFieldKeys ?? [],
+                  },
+                ]),
             ),
           );
         }
         if (savedChangedPatients) {
-          setChangedPatientIds(JSON.parse(savedChangedPatients) as string[]);
+          setChangedPatientIds(
+            (JSON.parse(savedChangedPatients) as string[]).filter(
+              (patientId) =>
+                retainedPatientIds.has(patientId) &&
+                !removedPatientIds.has(patientId),
+            ),
+          );
         }
         if (savedChangedSources) {
+          const parsedChangedSources = JSON.parse(savedChangedSources) as Record<
+            string,
+            string[]
+          >;
           setChangedSourceRecordIds(
-            JSON.parse(savedChangedSources) as Record<string, string[]>,
+            Object.fromEntries(
+              Object.entries(parsedChangedSources).filter(
+                ([patientId]) =>
+                  retainedPatientIds.has(patientId) &&
+                  !removedPatientIds.has(patientId),
+              ),
+            ),
           );
         }
       } catch {
@@ -312,7 +399,7 @@ export function ExtractionWorkspace({
       }
     }, 0);
     return () => window.clearTimeout(hydrationTimer);
-  }, []);
+  }, [initialCharts]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -1107,7 +1194,12 @@ export function ExtractionWorkspace({
                 <div>
                   <span>{String(chart.patient.wardOrder).padStart(2, "0")}</span>
                   <strong>{chart.patient.bedNo}床 · {chart.patient.name}</strong>
-                  <small>{chart.patient.gender} / {chart.patient.age}岁 · {chart.patient.diagnosis}</small>
+                  <small>
+                    {chart.patient.gender} / {chart.patient.age}岁
+                    {displayDiagnosis(chart.patient.diagnosis)
+                      ? ` · ${displayDiagnosis(chart.patient.diagnosis)}`
+                      : ""}
+                  </small>
                 </div>
                 <p>
                   {editor
@@ -1415,7 +1507,9 @@ function PatientBoard({
                   <b>{chart.patient.name}</b>
                   <small>{chart.patient.gender} · {chart.patient.age}岁</small>
                 </span>
-                <h2>{chart.patient.diagnosis}</h2>
+                {displayDiagnosis(chart.patient.diagnosis) && (
+                  <h2>{displayDiagnosis(chart.patient.diagnosis)}</h2>
+                )}
               </div>
             </button>
           );
@@ -1485,7 +1579,12 @@ function HistoryEditor({
         <div>
           <span>{chart.patient.bedNo}床</span>
           <strong>{chart.patient.name}</strong>
-          <small>{chart.patient.gender} / {chart.patient.age}岁 · {chart.patient.diagnosis}</small>
+          <small>
+            {chart.patient.gender} / {chart.patient.age}岁
+            {displayDiagnosis(chart.patient.diagnosis)
+              ? ` · ${displayDiagnosis(chart.patient.diagnosis)}`
+              : ""}
+          </small>
         </div>
         <Link
           href={hasExistingHandoffs ? "/handoff" : "/handoff?import=1"}
@@ -1782,7 +1881,9 @@ function HandoffBoard({
                     <strong>{chart.patient.bedNo}床</strong>
                     <span><b>{chart.patient.name}</b><small>{chart.patient.gender} · {chart.patient.age}岁</small></span>
                   </div>
-                  <h2>{chart.patient.diagnosis}</h2>
+                  {displayDiagnosis(chart.patient.diagnosis) && (
+                    <h2>{displayDiagnosis(chart.patient.diagnosis)}</h2>
+                  )}
                   <p>{important || "病历中没有可提取的病情重点，待医生检查补充。"}</p>
                   <footer>
                     <span>
@@ -1846,7 +1947,12 @@ function HandoffEditor({
         <div>
           <span>{patient.bedNo}床</span>
           <strong>{patient.name}</strong>
-          <small>{patient.gender} / {patient.age}岁 · {patient.diagnosis}</small>
+          <small>
+            {patient.gender} / {patient.age}岁
+            {displayDiagnosis(patient.diagnosis)
+              ? ` · ${displayDiagnosis(patient.diagnosis)}`
+              : ""}
+          </small>
         </div>
         <button type="button" className={styles.printTopAction} onClick={onPrint}>
           <Printer />
@@ -1858,7 +1964,9 @@ function HandoffEditor({
           <span className={styles.largeOrder}>{String(patient.wardOrder).padStart(2, "0")}</span>
           <small>PATIENT HANDOFF</small>
           <h2>{patient.bedNo}床 · {patient.name}</h2>
-          <p>{patient.diagnosis}</p>
+          {displayDiagnosis(patient.diagnosis) && (
+            <p>{displayDiagnosis(patient.diagnosis)}</p>
+          )}
           <dl>
             <div><dt>性别 / 年龄</dt><dd>{patient.gender} / {patient.age}岁</dd></div>
             <div><dt>当前阶段</dt><dd>{patient.stageLabel}</dd></div>
