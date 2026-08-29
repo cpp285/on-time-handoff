@@ -3,16 +3,13 @@
 import {
   ArrowLeft,
   BookOpenText,
-  CalendarDays,
   Check,
   CheckCircle2,
   ChevronRight,
   ClipboardList,
   Clock3,
-  Database,
   ExternalLink,
   FileCheck2,
-  Files,
   LoaderCircle,
   PenLine,
   Plus,
@@ -24,11 +21,12 @@ import {
   Sparkles,
   Stethoscope,
   Trash2,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { generateHandoffCard } from "../api/client";
 import { createDocumentFramework } from "../demo-source";
@@ -43,19 +41,56 @@ import type {
 } from "../types";
 import styles from "./extraction-workspace.module.css";
 
-type MainModule = "history" | "sync" | "handoff";
+type MainModule = "history" | "handoff";
 type WorkspaceExperience = "emr" | "handoff";
+
+// v2 removes legacy demo documents that incorrectly contained handoff
+// instructions inside the electronic medical record. Handoff suggestions now
+// exist only in the handoff workspace after AI generation.
+const CHARTS_STORAGE_KEY = "on-time-handoff:charts:v2";
+const HANDOFFS_STORAGE_KEY = "on-time-handoff:handoffs:v2";
+const CHANGED_PATIENTS_STORAGE_KEY = "on-time-handoff:changed-patients:v2";
+const CHANGED_SOURCES_STORAGE_KEY = "on-time-handoff:changed-sources:v2";
 
 interface HandoffEditorState {
   result: ExtractionResult;
   fields: ExtractionField[];
-  supplement: string;
+  customFields: CustomHandoffField[];
+  manuallyEditedFieldKeys: ExtractionField["key"][];
   reviewed: boolean;
+}
+
+interface CustomHandoffField {
+  id: string;
+  label: string;
+  value: string;
 }
 
 interface ExtractionWorkspaceProps {
   initialCharts: SourceSystemChart[];
   experience?: WorkspaceExperience;
+  autoImport?: boolean;
+}
+
+interface NewPatientInput {
+  name: string;
+  gender: "男" | "女";
+  age: number;
+  bedNo: string;
+  admissionDate: string;
+}
+
+function diagnosisFromAdmissionRecord(content: string) {
+  const section = content.match(
+    /【初步诊断】\s*([\s\S]*?)(?=\n【[^】]+】|$)/,
+  )?.[1];
+  if (!section) return "诊断待填写";
+
+  const diagnoses = section
+    .split("\n")
+    .map((line) => line.trim().replace(/^\d+[.、]\s*/, ""))
+    .filter(Boolean);
+  return diagnoses.length > 0 ? diagnoses.join("；") : "诊断待填写";
 }
 
 function formatDate(value: string | null) {
@@ -77,14 +112,72 @@ function currentDocument(chart: SourceSystemChart) {
   );
 }
 
+function createNewPatientChart(
+  input: NewPatientInput,
+  wardOrder: number,
+): SourceSystemChart {
+  const createdAt = new Date().toISOString();
+  const serial = Date.now().toString(36);
+  const bedNo = input.bedNo.trim().replace(/床$/, "").padStart(2, "0");
+  const patient = {
+    id: `omfs-new-${serial}`,
+    encounterId: `OMFS20260829${bedNo.padStart(3, "0")}-${serial.slice(-3).toUpperCase()}`,
+    wardOrder,
+    bedNo,
+    name: input.name.trim(),
+    gender: input.gender,
+    age: input.age,
+    diagnosis: "诊断待填写",
+    stageLabel: "今日新入院",
+    admissionDate: input.admissionDate,
+    currentSituation: "今日新入院，等待完成入院记录和首次病程记录。",
+    updatedAt: createdAt,
+    sourceCounts: { records: 1, orders: 0, reports: 0 },
+  } satisfies SourceSystemChart["patient"];
+
+  const documentSpecs: Array<{
+    templateKey: MedicalDocumentTemplateKey;
+    title: string;
+  }> = [
+    { templateKey: "admission_record", title: "入院记录" },
+    { templateKey: "first_progress", title: "首次病程记录" },
+    { templateKey: "routine_progress", title: "次日病程记录" },
+    { templateKey: "preoperative_summary", title: "术前小结" },
+    { templateKey: "preoperative_discussion", title: "术前讨论记录" },
+    { templateKey: "operation_record", title: "手术记录" },
+  ];
+
+  return {
+    patient,
+    documents: documentSpecs.map((item, index) => ({
+      key: `${item.templateKey}-${serial}-${index}`,
+      templateKey: item.templateKey,
+      title: item.title,
+      status: index === 0 ? ("current" as const) : ("not_started" as const),
+      recordedAt: index === 0 ? createdAt : null,
+      author: index === 0 ? "沈医生" : null,
+      content: createDocumentFramework(patient, item.templateKey),
+    })),
+    records: [
+      {
+        id: `patient-master-${serial}`,
+        type: "patient_master",
+        label: "住院患者基本信息",
+        recordedAt: createdAt,
+        content: `${bedNo}床，${patient.name}，${patient.gender}，${patient.age}岁，入院日期：${patient.admissionDate}。`,
+      },
+    ],
+  };
+}
+
 function handoffParagraph(editor: HandoffEditorState) {
   const patient = editor.result.patient;
-  const details = editor.fields
+  const details = [...editor.fields, ...editor.customFields]
     .filter((field) => field.value.trim())
-    .map((field) => `${field.label}：${field.value.trim()}`);
-  if (editor.supplement.trim()) {
-    details.push(`医生补充：${editor.supplement.trim()}`);
-  }
+    .map(
+      (field) =>
+        `${field.label}：${field.value.trim().replace(/[。；;]+$/, "")}`,
+    );
   return `${patient.bedNo}床 ${patient.name}，${patient.gender}，${patient.age}岁，${patient.diagnosis}。${details.join("；")}。`;
 }
 
@@ -103,11 +196,12 @@ function HighlightedSource({ content, quote }: { content: string; quote: string 
 export function ExtractionWorkspace({
   initialCharts,
   experience = "emr",
+  autoImport = false,
 }: ExtractionWorkspaceProps) {
   const isEmr = experience === "emr";
   const [charts, setCharts] = useState(initialCharts);
   const [module, setModule] = useState<MainModule>(
-    isEmr ? "history" : "sync",
+    isEmr ? "history" : "handoff",
   );
   const [search, setSearch] = useState("");
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
@@ -116,8 +210,16 @@ export function ExtractionWorkspace({
   const [selectedHandoffId, setSelectedHandoffId] = useState<string | null>(null);
   const [handoffs, setHandoffs] = useState<Record<string, HandoffEditorState>>({});
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncedAt, setLastSyncedAt] = useState("08月29日 18:42");
+  const [refreshingPatientId, setRefreshingPatientId] = useState<string | null>(
+    null,
+  );
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [changedPatientIds, setChangedPatientIds] = useState<string[]>([]);
+  const [changedSourceRecordIds, setChangedSourceRecordIds] = useState<
+    Record<string, string[]>
+  >({});
+  const [isAddingPatient, setIsAddingPatient] = useState(false);
+  const [isPrintGuardOpen, setIsPrintGuardOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [activeEvidence, setActiveEvidence] = useState<{
     patientId: string;
@@ -150,6 +252,8 @@ export function ExtractionWorkspace({
   const reviewedCount = Object.values(handoffs).filter(
     (handoff) => handoff.reviewed,
   ).length;
+  const totalHandoffCount = Object.keys(handoffs).length;
+  const hasExistingHandoffs = totalHandoffCount > 0;
 
   const evidenceRecord = activeEvidence
     ? handoffs[activeEvidence.patientId]?.result.sourceRecords.find(
@@ -157,10 +261,134 @@ export function ExtractionWorkspace({
       )
     : null;
 
+  useEffect(() => {
+    const hydrationTimer = window.setTimeout(() => {
+      try {
+        const savedCharts = window.localStorage.getItem(CHARTS_STORAGE_KEY);
+        const savedHandoffs = window.localStorage.getItem(HANDOFFS_STORAGE_KEY);
+        const savedChangedPatients = window.localStorage.getItem(
+          CHANGED_PATIENTS_STORAGE_KEY,
+        );
+        const savedChangedSources = window.localStorage.getItem(
+          CHANGED_SOURCES_STORAGE_KEY,
+        );
+        if (savedCharts) {
+          setCharts(JSON.parse(savedCharts) as SourceSystemChart[]);
+        }
+        if (savedHandoffs) {
+          const parsed = JSON.parse(savedHandoffs) as Record<
+            string,
+            HandoffEditorState
+          >;
+          setHandoffs(
+            Object.fromEntries(
+              Object.entries(parsed).map(([patientId, handoff]) => [
+                patientId,
+                {
+                  ...handoff,
+                  customFields: handoff.customFields ?? [],
+                  manuallyEditedFieldKeys:
+                    handoff.manuallyEditedFieldKeys ?? [],
+                },
+              ]),
+            ),
+          );
+        }
+        if (savedChangedPatients) {
+          setChangedPatientIds(JSON.parse(savedChangedPatients) as string[]);
+        }
+        if (savedChangedSources) {
+          setChangedSourceRecordIds(
+            JSON.parse(savedChangedSources) as Record<string, string[]>,
+          );
+        }
+      } catch {
+        window.localStorage.removeItem(CHARTS_STORAGE_KEY);
+        window.localStorage.removeItem(HANDOFFS_STORAGE_KEY);
+        window.localStorage.removeItem(CHANGED_PATIENTS_STORAGE_KEY);
+        window.localStorage.removeItem(CHANGED_SOURCES_STORAGE_KEY);
+      } finally {
+        setIsHydrated(true);
+      }
+    }, 0);
+    return () => window.clearTimeout(hydrationTimer);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    window.localStorage.setItem(CHARTS_STORAGE_KEY, JSON.stringify(charts));
+  }, [charts, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    window.localStorage.setItem(HANDOFFS_STORAGE_KEY, JSON.stringify(handoffs));
+  }, [handoffs, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    window.localStorage.setItem(
+      CHANGED_PATIENTS_STORAGE_KEY,
+      JSON.stringify(changedPatientIds),
+    );
+  }, [changedPatientIds, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    window.localStorage.setItem(
+      CHANGED_SOURCES_STORAGE_KEY,
+      JSON.stringify(changedSourceRecordIds),
+    );
+  }, [changedSourceRecordIds, isHydrated]);
+
+  function markPatientSourceChanged(
+    patientId: string,
+    sourceRecordId?: string,
+  ) {
+    setChangedPatientIds((current) =>
+      current.includes(patientId) ? current : [...current, patientId],
+    );
+    if (!sourceRecordId) return;
+    setChangedSourceRecordIds((current) => {
+      const patientSources = current[patientId] ?? [];
+      if (patientSources.includes(sourceRecordId)) return current;
+      return {
+        ...current,
+        [patientId]: [...patientSources, sourceRecordId],
+      };
+    });
+  }
+
   function openHistory(chart: SourceSystemChart) {
     const document = currentDocument(chart);
     setSelectedHistoryId(chart.patient.id);
     setSelectedDocumentKey(document.key);
+  }
+
+  function addPatient(input: NewPatientInput) {
+    const bedNo = input.bedNo.trim().replace(/床$/, "").padStart(2, "0");
+    if (charts.some((chart) => chart.patient.bedNo === bedNo)) {
+      return `${bedNo}床已经有在院患者，请更换床号。`;
+    }
+
+    const chart = createNewPatientChart(input, charts.length + 1);
+    setCharts((current) =>
+      [...current, chart]
+        .sort(
+          (a, b) =>
+            Number.parseInt(a.patient.bedNo, 10) -
+            Number.parseInt(b.patient.bedNo, 10),
+        )
+        .map((item, index) => ({
+          ...item,
+          patient: { ...item.patient, wardOrder: index + 1 },
+        })),
+    );
+    setIsAddingPatient(false);
+    if (hasExistingHandoffs) markPatientSourceChanged(chart.patient.id);
+    setSelectedHistoryId(chart.patient.id);
+    setSelectedDocumentKey(chart.documents[0].key);
+    setNotice(`${chart.patient.bedNo}床 ${chart.patient.name} 已入科，请完成入院记录。`);
+    return null;
   }
 
   function switchModule(nextModule: MainModule) {
@@ -171,30 +399,28 @@ export function ExtractionWorkspace({
     setActiveEvidence(null);
   }
 
-  async function syncLatestData() {
-    setIsSyncing(true);
-    setNotice(null);
-    await new Promise((resolve) => setTimeout(resolve, 850));
-    const time = new Intl.DateTimeFormat("zh-CN", {
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(new Date());
-    setLastSyncedAt(time.replaceAll("/", "月").replace(",", "日"));
-    setIsSyncing(false);
-    setNotice(`已同步口腔颌面头颈肿瘤科 ${charts.length} 位演示患者的最新资料。`);
-  }
-
   function updateDocument(content: string) {
     if (!selectedHistoryId || !selectedDocumentKey) return;
+    markPatientSourceChanged(
+      selectedHistoryId,
+      `document-${selectedDocumentKey}`,
+    );
     setCharts((current) =>
       current.map((chart) =>
         chart.patient.id !== selectedHistoryId
           ? chart
           : {
               ...chart,
+              patient: {
+                ...chart.patient,
+                diagnosis:
+                  chart.documents.find(
+                    (document) => document.key === selectedDocumentKey,
+                  )?.templateKey === "admission_record"
+                    ? diagnosisFromAdmissionRecord(content)
+                    : chart.patient.diagnosis,
+                updatedAt: new Date().toISOString(),
+              },
               documents: chart.documents.map((document) => {
                 const startsSelectedDocument = chart.documents.some(
                   (item) =>
@@ -265,6 +491,7 @@ export function ExtractionWorkspace({
     const nextKey =
       reusable?.key ?? `${templateKey}-${patientId}-${Date.now()}`;
 
+    markPatientSourceChanged(patientId, `document-${nextKey}`);
     setCharts((current) =>
       current.map((item) => {
         if (item.patient.id !== patientId) return item;
@@ -276,6 +503,7 @@ export function ExtractionWorkspace({
         if (reusable) {
           return {
             ...item,
+            patient: { ...item.patient, updatedAt: new Date().toISOString() },
             documents: demoted.map((document) =>
               document.key === reusable.key
                 ? {
@@ -305,6 +533,7 @@ export function ExtractionWorkspace({
         };
         return {
           ...item,
+          patient: { ...item.patient, updatedAt: new Date().toISOString() },
           documents: [
             ...demoted.slice(0, insertAt),
             nextDocument,
@@ -330,6 +559,10 @@ export function ExtractionWorkspace({
           ? chart
           : {
               ...chart,
+              patient: {
+                ...chart.patient,
+                updatedAt: new Date().toISOString(),
+              },
               documents: chart.documents.map((document) =>
                 document.key === documentKey
                   ? { ...document, title: nextTitle }
@@ -351,6 +584,7 @@ export function ExtractionWorkspace({
       (document) => document.key === documentKey,
     );
     if (removedIndex < 0) return;
+    markPatientSourceChanged(patientId, `document-${documentKey}`);
     const removed = chart.documents[removedIndex];
     let remaining = chart.documents.filter(
       (document) => document.key !== documentKey,
@@ -375,7 +609,14 @@ export function ExtractionWorkspace({
     setCharts((current) =>
       current.map((item) =>
         item.patient.id === patientId
-          ? { ...item, documents: remaining }
+          ? {
+              ...item,
+              patient: {
+                ...item.patient,
+                updatedAt: new Date().toISOString(),
+              },
+              documents: remaining,
+            }
           : item,
       ),
     );
@@ -390,7 +631,7 @@ export function ExtractionWorkspace({
     setNotice(null);
     try {
       const results = await Promise.all(
-        orderedCharts.map((chart) => generateHandoffCard(chart.patient.id)),
+        orderedCharts.map((chart) => generateHandoffCard(chart)),
       );
       setHandoffs(
         Object.fromEntries(
@@ -399,12 +640,15 @@ export function ExtractionWorkspace({
             {
               result,
               fields: result.fields,
-              supplement: "",
+              customFields: [],
+              manuallyEditedFieldKeys: [],
               reviewed: false,
             } satisfies HandoffEditorState,
           ]),
         ),
       );
+      setChangedPatientIds([]);
+      setChangedSourceRecordIds({});
       setModule("handoff");
       setSelectedHistoryId(null);
       setSelectedHandoffId(null);
@@ -413,7 +657,7 @@ export function ExtractionWorkspace({
       );
       setNotice(
         usedFallback
-          ? "DeepSeek 暂时不可用，已加载明确标注的五位虚构患者演示交班。"
+          ? `DeepSeek 暂时不可用，已加载明确标注的 ${results.length} 位虚构患者演示交班。`
           : `已按病区顺序生成 ${results.length} 位患者的交班记录。`,
       );
     } catch (error) {
@@ -422,6 +666,93 @@ export function ExtractionWorkspace({
       );
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  async function refreshPatientHandoff(patientId: string) {
+    const chart = charts.find((item) => item.patient.id === patientId);
+    if (!chart) return;
+    const previous = handoffs[patientId];
+    const changedSources = new Set(changedSourceRecordIds[patientId] ?? []);
+
+    setRefreshingPatientId(patientId);
+    setNotice(null);
+    try {
+      const result = await generateHandoffCard(chart);
+      const updatedFieldLabels: string[] = [];
+      const refreshedRecordMap = new Map(
+        result.sourceRecords.map((record) => [record.id, record.content]),
+      );
+      const mergedFields = result.fields.map((candidate) => {
+        const existing = previous?.fields.find(
+          (field) => field.key === candidate.key,
+        );
+        if (!existing) {
+          updatedFieldLabels.push(candidate.label);
+          return candidate;
+        }
+        if (previous.manuallyEditedFieldKeys.includes(candidate.key)) {
+          return existing;
+        }
+        const shouldReevaluateAttention =
+          candidate.key === "attention" && changedSources.size > 0;
+        const candidateUsesChangedSource = candidate.evidence.some((evidence) =>
+          changedSources.has(evidence.sourceRecordId),
+        );
+        const existingEvidenceWasInvalidated = existing.evidence.some(
+          (evidence) => {
+            if (!changedSources.has(evidence.sourceRecordId)) return false;
+            const latestSource = refreshedRecordMap.get(evidence.sourceRecordId);
+            return !latestSource?.includes(evidence.quote);
+          },
+        );
+        const fieldWasAffected =
+          shouldReevaluateAttention ||
+          candidateUsesChangedSource ||
+          existingEvidenceWasInvalidated;
+        if (changedSources.size > 0 && !fieldWasAffected) {
+          return existing;
+        }
+        if (
+          existing.value !== candidate.value ||
+          JSON.stringify(existing.evidence) !== JSON.stringify(candidate.evidence)
+        ) {
+          updatedFieldLabels.push(candidate.label);
+        }
+        return candidate;
+      });
+      setHandoffs((current) => ({
+        ...current,
+        [patientId]: {
+          result: { ...result, fields: mergedFields },
+          fields: mergedFields,
+          customFields: current[patientId]?.customFields ?? [],
+          manuallyEditedFieldKeys:
+            current[patientId]?.manuallyEditedFieldKeys ?? [],
+          reviewed: false,
+        },
+      }));
+      setChangedPatientIds((current) =>
+        current.filter((id) => id !== patientId),
+      );
+      setChangedSourceRecordIds((current) => {
+        const next = { ...current };
+        delete next[patientId];
+        return next;
+      });
+      setNotice(
+        updatedFieldLabels.length > 0
+          ? `${chart.patient.bedNo}床仅更新了${updatedFieldLabels.join("、")}；其余交班内容和其他患者交班未变。`
+          : `${chart.patient.bedNo}床本次病历修改未影响现有交班内容，内容保持不变。`,
+      );
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "该患者交班刷新失败，请稍后重试。",
+      );
+    } finally {
+      setRefreshingPatientId(null);
     }
   }
 
@@ -435,20 +766,65 @@ export function ExtractionWorkspace({
       [patientId]: {
         ...current[patientId],
         reviewed: false,
+        manuallyEditedFieldKeys: current[patientId].manuallyEditedFieldKeys.includes(
+          key,
+        )
+          ? current[patientId].manuallyEditedFieldKeys
+          : [...current[patientId].manuallyEditedFieldKeys, key],
         fields: current[patientId].fields.map((field) =>
-          field.key === key ? { ...field, value } : field,
+          field.key === key ? { ...field, value, evidence: [] } : field,
         ),
       },
     }));
   }
 
-  function updateSupplement(patientId: string, supplement: string) {
+  function addCustomHandoffField(patientId: string) {
+    setHandoffs((current) => {
+      const handoff = current[patientId];
+      return {
+        ...current,
+        [patientId]: {
+          ...handoff,
+          reviewed: false,
+          customFields: [
+            ...handoff.customFields,
+            {
+              id: `custom-${Date.now()}`,
+              label: `补充内容 ${handoff.customFields.length + 1}`,
+              value: "",
+            },
+          ],
+        },
+      };
+    });
+  }
+
+  function updateCustomHandoffField(
+    patientId: string,
+    fieldId: string,
+    patch: Partial<Pick<CustomHandoffField, "label" | "value">>,
+  ) {
     setHandoffs((current) => ({
       ...current,
       [patientId]: {
         ...current[patientId],
-        supplement,
         reviewed: false,
+        customFields: current[patientId].customFields.map((field) =>
+          field.id === fieldId ? { ...field, ...patch } : field,
+        ),
+      },
+    }));
+  }
+
+  function deleteCustomHandoffField(patientId: string, fieldId: string) {
+    setHandoffs((current) => ({
+      ...current,
+      [patientId]: {
+        ...current[patientId],
+        reviewed: false,
+        customFields: current[patientId].customFields.filter(
+          (field) => field.id !== fieldId,
+        ),
       },
     }));
   }
@@ -459,6 +835,15 @@ export function ExtractionWorkspace({
       [patientId]: { ...current[patientId], reviewed: true },
     }));
     setNotice("该患者交班内容已核对。全部患者核对后可统一打印。");
+  }
+
+  function requestUnifiedPrint() {
+    if (totalHandoffCount === 0) return;
+    if (reviewedCount !== totalHandoffCount) {
+      setIsPrintGuardOpen(true);
+      return;
+    }
+    window.print();
   }
 
   return (
@@ -479,21 +864,23 @@ export function ExtractionWorkspace({
             <Stethoscope aria-hidden="true" />
             <span>
               <strong>口腔颌面头颈肿瘤科</strong>
-              <small>{isEmr ? "住院医生工作站 · 病历书写" : "院内侧边应用 · 只读同步"}</small>
+              <small>{isEmr ? "住院医生工作站 · 病历书写" : "院内侧边应用 · 病历一键导入"}</small>
             </span>
           </div>
           <div className={styles.headerActions}>
             <span>沈医生 · 白班</span>
-            <Link href={isEmr ? "/handoff" : "/"}>
-              {isEmr ? "打开交班助手" : "返回电子病历"}
-              <ExternalLink />
-            </Link>
+            {!isEmr && (
+              <Link href="/">
+                返回电子病历
+                <ExternalLink />
+              </Link>
+            )}
           </div>
         </header>
 
         <div className={styles.appShell}>
           <nav
-            className={`${styles.moduleRail} ${isEmr ? styles.singleModuleRail : ""}`}
+            className={`${styles.moduleRail} ${styles.singleModuleRail}`}
             aria-label="主要功能"
           >
             {isEmr ? (
@@ -507,30 +894,19 @@ export function ExtractionWorkspace({
                 <small>{charts.length} 人</small>
               </button>
             ) : (
-              <>
-                <button
-                  type="button"
-                  className={module === "sync" ? styles.activeModule : ""}
-                  onClick={() => switchModule("sync")}
-                >
-                  <Database aria-hidden="true" />
-                  <strong>资料同步</strong>
-                  <small>已连接</small>
-                </button>
-                <button
-                  type="button"
-                  className={module === "handoff" ? styles.activeModule : ""}
-                  onClick={() => switchModule("handoff")}
-                >
-                  <ClipboardList aria-hidden="true" />
-                  <strong>交班管理</strong>
-                  <small>
-                    {Object.keys(handoffs).length
-                      ? `${reviewedCount}/${Object.keys(handoffs).length}`
-                      : "待生成"}
-                  </small>
-                </button>
-              </>
+              <button
+                type="button"
+                className={module === "handoff" ? styles.activeModule : ""}
+                onClick={() => switchModule("handoff")}
+              >
+                <ClipboardList aria-hidden="true" />
+                <strong>交班管理</strong>
+                <small>
+                  {Object.keys(handoffs).length
+                    ? `${reviewedCount}/${Object.keys(handoffs).length}`
+                    : "待导入"}
+                </small>
+              </button>
             )}
             <div className={styles.railClock}>
               <time>18:45</time>
@@ -545,20 +921,42 @@ export function ExtractionWorkspace({
                 eyebrow="MEDICAL RECORDS"
                 description="在院内电子病历中完成患者文书，交班整理由独立的准点交班助手完成。"
                 charts={visibleCharts}
+                totalCount={charts.length}
                 search={search}
                 onSearch={setSearch}
                 onOpen={openHistory}
                 action={
-                  <Link
-                    href="/handoff"
-                    className={styles.primaryTopAction}
-                  >
-                    <ExternalLink />
-                    <span>
-                      <strong>打开准点交班助手</strong>
-                      <small>独立院内应用 · 只读同步</small>
-                    </span>
-                  </Link>
+                  <>
+                    <button
+                      type="button"
+                      className={styles.secondaryTopAction}
+                      onClick={() => setIsAddingPatient(true)}
+                    >
+                      <UserPlus /> 新增患者
+                    </button>
+                    <Link
+                      href={
+                        hasExistingHandoffs
+                          ? "/handoff"
+                          : "/handoff?import=1"
+                      }
+                      className={styles.primaryTopAction}
+                    >
+                      <ExternalLink />
+                      <span>
+                        <strong>
+                          {hasExistingHandoffs
+                            ? "返回交班核对"
+                            : "一键导入交班"}
+                        </strong>
+                        <small>
+                          {hasExistingHandoffs
+                            ? "保留已有修改与核对状态"
+                            : "按交班模板提取 · 医生核对"}
+                        </small>
+                      </span>
+                    </Link>
+                  </>
                 }
               />
             )}
@@ -578,17 +976,7 @@ export function ExtractionWorkspace({
                   deleteDocument(selectedHistory.patient.id, key)
                 }
                 onSave={() => setNotice(`${selectedDocument.title}已在演示工作台保存。`)}
-              />
-            )}
-
-            {!isEmr && module === "sync" && (
-              <SyncDashboard
-                charts={orderedCharts}
-                lastSyncedAt={lastSyncedAt}
-                isSyncing={isSyncing}
-                isGenerating={isGenerating}
-                onSync={syncLatestData}
-                onGenerate={generateAllHandoffs}
+                hasExistingHandoffs={hasExistingHandoffs}
               />
             )}
 
@@ -602,6 +990,10 @@ export function ExtractionWorkspace({
                 onOpen={setSelectedHandoffId}
                 onGenerate={generateAllHandoffs}
                 isGenerating={isGenerating}
+                autoImport={autoImport}
+                isReady={isHydrated}
+                changedPatientIds={changedPatientIds}
+                onPrint={requestUnifiedPrint}
               />
             )}
 
@@ -612,10 +1004,22 @@ export function ExtractionWorkspace({
                 onFieldChange={(key, value) =>
                   updateHandoffField(selectedHandoffId, key, value)
                 }
-                onSupplementChange={(value) =>
-                  updateSupplement(selectedHandoffId, value)
+                onAddCustomField={() =>
+                  addCustomHandoffField(selectedHandoffId)
                 }
+                onCustomFieldChange={(fieldId, patch) =>
+                  updateCustomHandoffField(selectedHandoffId, fieldId, patch)
+                }
+                onDeleteCustomField={(fieldId) =>
+                  deleteCustomHandoffField(selectedHandoffId, fieldId)
+                }
+                onRefresh={() => refreshPatientHandoff(selectedHandoffId)}
+                isRefreshing={refreshingPatientId === selectedHandoffId}
+                hasSourceChanges={changedPatientIds.includes(selectedHandoffId)}
                 onReview={() => reviewHandoff(selectedHandoffId)}
+                reviewedCount={reviewedCount}
+                totalCount={totalHandoffCount}
+                onPrint={requestUnifiedPrint}
                 onEvidence={(fieldLabel, evidence) =>
                   setActiveEvidence({
                     patientId: selectedHandoffId,
@@ -632,7 +1036,12 @@ export function ExtractionWorkspace({
           <aside className={styles.sourceDrawer}>
             <header>
               <span>
-                <small>原文对照 · {activeEvidence.fieldLabel}</small>
+                <small>
+                  {activeEvidence.fieldLabel === "需要注意的病情"
+                    ? "AI 判断依据"
+                    : "原文对照"}
+                  {" · "}{activeEvidence.fieldLabel}
+                </small>
                 <strong>{evidenceRecord.label}</strong>
               </span>
               <button
@@ -652,6 +1061,25 @@ export function ExtractionWorkspace({
               quote={activeEvidence.evidence.quote}
             />
           </aside>
+        )}
+
+        {isEmr && isAddingPatient && (
+          <NewPatientDialog
+            onClose={() => setIsAddingPatient(false)}
+            onCreate={addPatient}
+          />
+        )}
+
+        {!isEmr && isPrintGuardOpen && (
+          <PrintReviewGuardDialog
+            reviewedCount={reviewedCount}
+            totalCount={totalHandoffCount}
+            onClose={() => setIsPrintGuardOpen(false)}
+            onContinueReview={() => {
+              setIsPrintGuardOpen(false);
+              setSelectedHandoffId(null);
+            }}
+          />
         )}
 
         {notice && (
@@ -737,11 +1165,210 @@ function SearchBar({ value, onChange }: { value: string; onChange: (value: strin
   );
 }
 
+function NewPatientDialog({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (input: NewPatientInput) => string | null;
+}) {
+  const [form, setForm] = useState<NewPatientInput>({
+    name: "",
+    gender: "男",
+    age: 40,
+    bedNo: "",
+    admissionDate: "2026-08-29",
+  });
+  const [error, setError] = useState("");
+
+  function update<K extends keyof NewPatientInput>(
+    key: K,
+    value: NewPatientInput[K],
+  ) {
+    setForm((current) => ({ ...current, [key]: value }));
+    setError("");
+  }
+
+  return (
+    <div className={styles.dialogBackdrop} onMouseDown={onClose}>
+      <section
+        className={styles.patientDialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-patient-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header>
+          <span>
+            <small>NEW ADMISSION</small>
+            <strong id="new-patient-title">新增入院患者</strong>
+            <p>建立患者基本信息后，系统会直接打开预填框架的入院记录。</p>
+          </span>
+          <button type="button" aria-label="关闭新增患者窗口" onClick={onClose}>
+            <X />
+          </button>
+        </header>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            const message = onCreate(form);
+            if (message) setError(message);
+          }}
+        >
+          <div className={styles.patientFormGrid}>
+            <label>
+              <span>姓名</span>
+              <input
+                required
+                autoFocus
+                value={form.name}
+                onChange={(event) => update("name", event.target.value)}
+                placeholder="请输入患者姓名"
+              />
+            </label>
+            <label>
+              <span>性别</span>
+              <select
+                value={form.gender}
+                onChange={(event) =>
+                  update("gender", event.target.value as "男" | "女")
+                }
+              >
+                <option value="男">男</option>
+                <option value="女">女</option>
+              </select>
+            </label>
+            <label>
+              <span>年龄</span>
+              <input
+                required
+                type="number"
+                min={1}
+                max={120}
+                value={form.age}
+                onChange={(event) => update("age", Number(event.target.value))}
+              />
+            </label>
+            <label>
+              <span>床号</span>
+              <input
+                required
+                inputMode="numeric"
+                maxLength={3}
+                value={form.bedNo}
+                onChange={(event) => update("bedNo", event.target.value)}
+                placeholder="如 18"
+              />
+            </label>
+            <label>
+              <span>入院日期</span>
+              <input
+                required
+                type="date"
+                value={form.admissionDate}
+                onChange={(event) => update("admissionDate", event.target.value)}
+              />
+            </label>
+          </div>
+          {error && <p className={styles.formError}>{error}</p>}
+          <footer>
+            <span><ShieldCheck /> 演示环境，请勿填写真实患者信息</span>
+            <div>
+              <button type="button" onClick={onClose}>取消</button>
+              <button type="submit"><Plus /> 建立患者并书写病历</button>
+            </div>
+          </footer>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+function PrintReviewGuardDialog({
+  reviewedCount,
+  totalCount,
+  onClose,
+  onContinueReview,
+}: {
+  reviewedCount: number;
+  totalCount: number;
+  onClose: () => void;
+  onContinueReview: () => void;
+}) {
+  const pendingCount = Math.max(totalCount - reviewedCount, 0);
+
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div className={styles.dialogBackdrop} onMouseDown={onClose}>
+      <section
+        className={`${styles.patientDialog} ${styles.printGuardDialog}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="print-review-title"
+        aria-describedby="print-review-description"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header>
+          <span>
+            <small>PRINT CHECK</small>
+            <strong id="print-review-title">完成核对后再统一打印</strong>
+            <p id="print-review-description">
+              交班单包含全病区患者，打印前必须逐位确认交班内容。
+            </p>
+          </span>
+          <button type="button" aria-label="关闭打印核对提示" onClick={onClose}>
+            <X />
+          </button>
+        </header>
+        <div className={styles.printGuardBody}>
+          <span className={styles.printGuardIcon} aria-hidden="true">
+            <FileCheck2 />
+          </span>
+          <div>
+            <strong>还有 {pendingCount} 位患者待核对</strong>
+            <p>
+              当前已核对 {reviewedCount}/{totalCount} 位。请先打开待核对患者，检查并确认交班内容后再打印。
+            </p>
+            <div
+              className={styles.printGuardProgress}
+              role="progressbar"
+              aria-label="患者交班核对进度"
+              aria-valuemin={0}
+              aria-valuemax={totalCount}
+              aria-valuenow={reviewedCount}
+            >
+              <i
+                style={{
+                  width: `${totalCount > 0 ? (reviewedCount / totalCount) * 100 : 0}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        <footer className={styles.printGuardFooter}>
+          <button type="button" onClick={onClose}>暂不打印</button>
+          <button type="button" autoFocus onClick={onContinueReview}>
+            <ClipboardList /> 查看待核对患者
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
 function PatientBoard({
   title,
   eyebrow,
   description,
   charts,
+  totalCount,
   search,
   onSearch,
   onOpen,
@@ -751,6 +1378,7 @@ function PatientBoard({
   eyebrow: string;
   description: string;
   charts: SourceSystemChart[];
+  totalCount: number;
   search: string;
   onSearch: (value: string) => void;
   onOpen: (chart: SourceSystemChart) => void;
@@ -764,17 +1392,13 @@ function PatientBoard({
       <div className={styles.boardToolbar}>
         <SearchBar value={search} onChange={onSearch} />
         <div className={styles.boardStats}>
-          <span><Users /> 共5位患者</span>
+          <span><Users /> 共{totalCount}位患者</span>
           <span><FileCheck2 /> 文书阶段各不相同</span>
           <span><ShieldCheck /> 全部为虚构数据</span>
         </div>
       </div>
       <div className={styles.patientGrid}>
         {charts.map((chart) => {
-          const completed = chart.documents.filter(
-            (document) => document.status !== "not_started",
-          ).length;
-          const current = currentDocument(chart);
           return (
             <button
               type="button"
@@ -783,137 +1407,20 @@ function PatientBoard({
               onClick={() => onOpen(chart)}
             >
               <header>
-                <span className={styles.orderIndex}>
-                  {String(chart.patient.wardOrder).padStart(2, "0")}
-                </span>
+                <strong className={styles.compactBedNo}>{chart.patient.bedNo}床</strong>
                 <span className={styles.stageBadge}>{chart.patient.stageLabel}</span>
               </header>
-              <div className={styles.patientTitle}>
-                <strong>{chart.patient.bedNo}床</strong>
+              <div className={styles.compactPatientInfo}>
                 <span>
                   <b>{chart.patient.name}</b>
                   <small>{chart.patient.gender} · {chart.patient.age}岁</small>
                 </span>
+                <h2>{chart.patient.diagnosis}</h2>
               </div>
-              <h2>{chart.patient.diagnosis}</h2>
-              <p>{chart.patient.currentSituation}</p>
-              <div className={styles.documentProgress}>
-                <span>
-                  <small>当前文书</small>
-                  <strong>{current.title}</strong>
-                </span>
-                <span className={styles.progressCount}>已写 {completed} 篇</span>
-                <small className={styles.continuousHint}>住院期间持续追加</small>
-              </div>
-              <footer>
-                <span><CalendarDays /> 入院 {chart.patient.admissionDate.slice(5).replace("-", ".")}</span>
-                <strong>进入病史书写 <ChevronRight /></strong>
-              </footer>
             </button>
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function SyncDashboard({
-  charts,
-  lastSyncedAt,
-  isSyncing,
-  isGenerating,
-  onSync,
-  onGenerate,
-}: {
-  charts: SourceSystemChart[];
-  lastSyncedAt: string;
-  isSyncing: boolean;
-  isGenerating: boolean;
-  onSync: () => void;
-  onGenerate: () => void;
-}) {
-  const documentCount = charts.reduce(
-    (total, chart) =>
-      total + chart.documents.filter((item) => item.status !== "not_started").length,
-    0,
-  );
-  const sourceCount = charts.reduce(
-    (total, chart) => total + chart.records.length,
-    0,
-  );
-  const pendingCount = charts.reduce(
-    (total, chart) =>
-      total + chart.records.filter((record) => /(待|未回|检测中|未取材)/.test(record.content)).length,
-    0,
-  );
-
-  return (
-    <div className={`${styles.page} ${styles.syncPage}`}>
-      <PageHeader
-        eyebrow="READ-ONLY EMR CONNECTOR"
-        title="病区资料同步"
-        description="从院内电子病历读取已书写文书、今日医嘱和检验检查状态，医生无需再次录入。"
-      >
-        <button
-          type="button"
-          className={styles.secondaryTopAction}
-          onClick={onSync}
-          disabled={isSyncing || isGenerating}
-        >
-          <RefreshCw className={isSyncing ? styles.spin : ""} />
-          {isSyncing ? "正在同步" : "同步最新资料"}
-        </button>
-        <button
-          type="button"
-          className={styles.primaryTopAction}
-          onClick={onGenerate}
-          disabled={isSyncing || isGenerating}
-        >
-          {isGenerating ? <LoaderCircle className={styles.spin} /> : <Sparkles />}
-          <span>
-            <strong>{isGenerating ? "正在生成全病区交班" : "一键生成全病区交班"}</strong>
-            <small>按床位顺序 · 无需复制粘贴</small>
-          </span>
-        </button>
-      </PageHeader>
-
-      <section className={styles.syncStatusBar}>
-        <div>
-          <span className={styles.liveDot} />
-          <strong>院内数据接口已连接</strong>
-          <small>只读权限 · 不回写 EMR</small>
-        </div>
-        <span>最后同步：{lastSyncedAt}</span>
-      </section>
-
-      <section className={styles.syncMetrics}>
-        <article><Users /><span><small>已同步患者</small><strong>{charts.length}</strong></span></article>
-        <article><Files /><span><small>已写病历</small><strong>{documentCount}</strong></span></article>
-        <article><Database /><span><small>今日资料</small><strong>{sourceCount}</strong></span></article>
-        <article><Clock3 /><span><small>待回结果</small><strong>{pendingCount}</strong></span></article>
-      </section>
-
-      <section className={styles.syncedPatientSection}>
-        <header>
-          <div><small>SYNC MANIFEST</small><h2>口腔颌面头颈肿瘤科 · 同步清单</h2></div>
-          <span><CheckCircle2 /> {charts.length}/{charts.length} 同步成功</span>
-        </header>
-        <div className={styles.syncedPatientList}>
-          {charts.map((chart) => (
-            <article key={chart.patient.id}>
-              <span className={styles.syncOrder}>{String(chart.patient.wardOrder).padStart(2, "0")}</span>
-              <div><strong>{chart.patient.bedNo}床 · {chart.patient.name}</strong><small>{chart.patient.gender} / {chart.patient.age}岁 · {chart.patient.encounterId}</small></div>
-              <div><strong>{chart.patient.diagnosis}</strong><small>{chart.patient.stageLabel}</small></div>
-              <span>{chart.documents.filter((item) => item.status !== "not_started").length} 篇病历 · {chart.records.length} 条今日资料</span>
-              <b><Check /> 已同步</b>
-            </article>
-          ))}
-        </div>
-        <footer>
-          <span><ShieldCheck /> 虚构数据演示；正式环境应部署于医院内网。</span>
-          <Link href="/"><ExternalLink /> 返回电子病历查看原文</Link>
-        </footer>
-      </section>
     </div>
   );
 }
@@ -928,6 +1435,7 @@ function HistoryEditor({
   onRename,
   onDelete,
   onSave,
+  hasExistingHandoffs,
 }: {
   chart: SourceSystemChart;
   selectedKey: MedicalDocumentKey;
@@ -938,6 +1446,7 @@ function HistoryEditor({
   onRename: (key: MedicalDocumentKey, title: string) => void;
   onDelete: (key: MedicalDocumentKey) => void;
   onSave: () => void;
+  hasExistingHandoffs: boolean;
 }) {
   const document = chart.documents.find((item) => item.key === selectedKey)!;
   const [renamingKey, setRenamingKey] = useState<MedicalDocumentKey | null>(null);
@@ -979,13 +1488,19 @@ function HistoryEditor({
           <small>{chart.patient.gender} / {chart.patient.age}岁 · {chart.patient.diagnosis}</small>
         </div>
         <Link
-          href="/handoff"
+          href={hasExistingHandoffs ? "/handoff" : "/handoff?import=1"}
           className={styles.primaryTopAction}
         >
           <ExternalLink />
           <span>
-            <strong>打开准点交班助手</strong>
-            <small>只读同步全病区已保存病历</small>
+            <strong>
+              {hasExistingHandoffs ? "返回交班核对" : "一键导入交班"}
+            </strong>
+            <small>
+              {hasExistingHandoffs
+                ? "本次修改不会自动覆盖交班"
+                : "按交班模板提取 · 医生核对"}
+            </small>
           </span>
         </Link>
       </header>
@@ -1145,6 +1660,10 @@ function HandoffBoard({
   onOpen,
   onGenerate,
   isGenerating,
+  autoImport,
+  isReady,
+  changedPatientIds,
+  onPrint,
 }: {
   charts: SourceSystemChart[];
   handoffs: Record<string, HandoffEditorState>;
@@ -1154,28 +1673,36 @@ function HandoffBoard({
   onOpen: (patientId: string) => void;
   onGenerate: () => void;
   isGenerating: boolean;
+  autoImport: boolean;
+  isReady: boolean;
+  changedPatientIds: string[];
+  onPrint: () => void;
 }) {
   const hasHandoffs = Object.keys(handoffs).length > 0;
+  const importStarted = useRef(false);
+
+  useEffect(() => {
+    if (!isReady || !autoImport || hasHandoffs || importStarted.current) return;
+    importStarted.current = true;
+    void onGenerate();
+  }, [autoImport, hasHandoffs, isReady, onGenerate]);
+
   return (
     <div className={styles.page}>
       <PageHeader
-        eyebrow="HANDOFF RECORDS"
-        title="交班记录"
-        description="患者顺序与本次同步清单一致。逐人核对后，统一整理为连续段落打印。"
+        eyebrow="HANDOFF TEMPLATE"
+        title="交班核对"
+        description="按入院概况、最新病程和必要的术前记录整理目前病情；AI 只提出本夜观察重点。"
       >
-        <button
-          type="button"
-          className={styles.secondaryTopAction}
-          onClick={onGenerate}
-          disabled={isGenerating}
-        >
-          {isGenerating ? <LoaderCircle className={styles.spin} /> : <Sparkles />}
-          {hasHandoffs ? "重新生成" : "生成全病区交班"}
-        </button>
+        {hasHandoffs && (
+          <span className={styles.savedHandoffNotice}>
+            <ShieldCheck /> 已保留本次交班草稿
+          </span>
+        )}
         <button
           type="button"
           className={styles.printTopAction}
-          onClick={() => window.print()}
+          onClick={onPrint}
           disabled={!hasHandoffs}
         >
           <Printer />
@@ -1186,15 +1713,28 @@ function HandoffBoard({
         </button>
       </PageHeader>
 
+      <section className={styles.handoffTemplateBar}>
+        <span><ClipboardList /></span>
+        <div>
+          <small>当前交班模板</small>
+          <strong>患者基本信息 + 病情摘录 + AI 注意建议</strong>
+        </div>
+        <ul>
+          {["姓名", "性别", "年龄", "床号", "诊断", "目前病情", "需要注意的病情"].map((field) => (
+            <li key={field}>{field}</li>
+          ))}
+        </ul>
+      </section>
+
       {!hasHandoffs ? (
         <div className={styles.handoffEmpty}>
           <span><ClipboardList /></span>
-          <small>STEP 02</small>
-          <h2>同步完成，不再手工摘抄</h2>
-          <p>系统将按 03、07、12、16、21 床的顺序读取院内同步资料，生成五位患者的交班重点。</p>
+          <small>ONE-CLICK IMPORT</small>
+          <h2>从病历直接生成交班</h2>
+          <p>系统先整合入院概况、最新病程及必要的术前记录，再由 AI 单独判断今晚夜班观察重点，全部交由医生核对。</p>
           <button type="button" onClick={onGenerate} disabled={isGenerating}>
             {isGenerating ? <LoaderCircle className={styles.spin} /> : <Sparkles />}
-            {isGenerating ? "正在整理五位患者" : "一键生成全病区交班"}
+            {isGenerating ? `正在提取 ${charts.length} 位患者` : "从病历一键导入交班"}
           </button>
         </div>
       ) : (
@@ -1210,9 +1750,12 @@ function HandoffBoard({
             {charts.map((chart) => {
               const editor = handoffs[chart.patient.id];
               if (!editor) return null;
+              const hasSourceChanges = changedPatientIds.includes(
+                chart.patient.id,
+              );
               const important = editor.fields
-                .filter((field) => ["current_condition", "shift_changes", "pending_results", "attention"].includes(field.key) && field.value)
-                .map((field) => field.value)
+                .filter((field) => field.value)
+                .map((field) => field.value.trim().replace(/[。；;]+$/, ""))
                 .join("；");
               return (
                 <button
@@ -1223,9 +1766,16 @@ function HandoffBoard({
                 >
                   <header>
                     <span className={styles.orderIndex}>{String(chart.patient.wardOrder).padStart(2, "0")}</span>
-                    <span className={editor.reviewed ? styles.reviewedStatus : styles.reviewStatus}>
-                      {editor.reviewed ? <CheckCircle2 /> : <PenLine />}
-                      {editor.reviewed ? "已核对" : "待核对"}
+                    <span className={styles.handoffCardStatuses}>
+                      {hasSourceChanges && (
+                        <em className={styles.sourceChangedStatus}>
+                          <RefreshCw /> 病历有更新
+                        </em>
+                      )}
+                      <span className={editor.reviewed ? styles.reviewedStatus : styles.reviewStatus}>
+                        {editor.reviewed ? <CheckCircle2 /> : <PenLine />}
+                        {editor.reviewed ? "已核对" : "待核对"}
+                      </span>
                     </span>
                   </header>
                   <div className={styles.patientTitle}>
@@ -1233,9 +1783,13 @@ function HandoffBoard({
                     <span><b>{chart.patient.name}</b><small>{chart.patient.gender} · {chart.patient.age}岁</small></span>
                   </div>
                   <h2>{chart.patient.diagnosis}</h2>
-                  <p>{important || "原始资料没有可提取的交班重点，待医生补充。"}</p>
+                  <p>{important || "病历中没有可提取的病情重点，待医生检查补充。"}</p>
                   <footer>
-                    <span>{editor.fields.filter((field) => field.value).length} 项已提取</span>
+                    <span>
+                      {[...editor.fields, ...editor.customFields].filter(
+                        (field) => field.value.trim(),
+                      ).length} 项内容
+                    </span>
                     <strong>核对交班内容 <ChevronRight /></strong>
                   </footer>
                 </button>
@@ -1252,15 +1806,34 @@ function HandoffEditor({
   editor,
   onBack,
   onFieldChange,
-  onSupplementChange,
+  onAddCustomField,
+  onCustomFieldChange,
+  onDeleteCustomField,
+  onRefresh,
+  isRefreshing,
+  hasSourceChanges,
   onReview,
+  reviewedCount,
+  totalCount,
+  onPrint,
   onEvidence,
 }: {
   editor: HandoffEditorState;
   onBack: () => void;
   onFieldChange: (key: ExtractionField["key"], value: string) => void;
-  onSupplementChange: (value: string) => void;
+  onAddCustomField: () => void;
+  onCustomFieldChange: (
+    fieldId: string,
+    patch: Partial<Pick<CustomHandoffField, "label" | "value">>,
+  ) => void;
+  onDeleteCustomField: (fieldId: string) => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+  hasSourceChanges: boolean;
   onReview: () => void;
+  reviewedCount: number;
+  totalCount: number;
+  onPrint: () => void;
   onEvidence: (fieldLabel: string, evidence: FieldEvidence) => void;
 }) {
   const patient = editor.result.patient;
@@ -1275,9 +1848,9 @@ function HandoffEditor({
           <strong>{patient.name}</strong>
           <small>{patient.gender} / {patient.age}岁 · {patient.diagnosis}</small>
         </div>
-        <button type="button" className={styles.printTopAction} onClick={() => window.print()}>
+        <button type="button" className={styles.printTopAction} onClick={onPrint}>
           <Printer />
-          <span><strong>统一打印交班</strong><small>按全部患者顺序合并</small></span>
+          <span><strong>统一打印交班</strong><small>{reviewedCount}/{totalCount} 已核对</small></span>
         </button>
       </header>
       <div className={styles.handoffEditorShell}>
@@ -1287,9 +1860,9 @@ function HandoffEditor({
           <h2>{patient.bedNo}床 · {patient.name}</h2>
           <p>{patient.diagnosis}</p>
           <dl>
+            <div><dt>性别 / 年龄</dt><dd>{patient.gender} / {patient.age}岁</dd></div>
             <div><dt>当前阶段</dt><dd>{patient.stageLabel}</dd></div>
             <div><dt>住院号</dt><dd>{patient.encounterId}</dd></div>
-            <div><dt>生成模式</dt><dd>{editor.result.mode === "deepseek" ? "DeepSeek" : "虚构演示兜底"}</dd></div>
           </dl>
           <div className={styles.paragraphPreview}>
             <small>统一打印段落预览</small>
@@ -1298,38 +1871,93 @@ function HandoffEditor({
         </aside>
         <section className={styles.handoffForm}>
           <header>
-            <span><PenLine /> 医生核对与补充</span>
-            <strong className={editor.reviewed ? styles.reviewedStatus : styles.reviewStatus}>
-              {editor.reviewed ? <CheckCircle2 /> : <PenLine />}
-              {editor.reviewed ? "已核对" : "待核对"}
-            </strong>
+            <span>
+              <PenLine /> 医生核对与补充
+              {hasSourceChanges && (
+                <em className={styles.inlineSourceChanged}>
+                  病历有新修改
+                </em>
+              )}
+            </span>
+            <div className={styles.handoffHeaderActions}>
+              <button
+                type="button"
+                className={`${styles.refreshPatientButton} ${hasSourceChanges ? styles.refreshPatientButtonActive : ""}`}
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                title="只重新提取当前患者，其他患者及医生补充内容保持不变"
+              >
+                {isRefreshing ? (
+                  <LoaderCircle className={styles.spin} />
+                ) : (
+                  <RefreshCw />
+                )}
+                <span>
+                  <strong>{isRefreshing ? "正在刷新" : "刷新此患者"}</strong>
+                  <small>仅更新受影响内容</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                className={styles.addHandoffFieldButton}
+                onClick={onAddCustomField}
+              >
+                <Plus /> 添加内容
+              </button>
+              <strong className={editor.reviewed ? styles.reviewedStatus : styles.reviewStatus}>
+                {editor.reviewed ? <CheckCircle2 /> : <PenLine />}
+                {editor.reviewed ? "已核对" : "待核对"}
+              </strong>
+            </div>
           </header>
           <div className={styles.handoffFields}>
             {extractionFieldConfig.map((config, index) => {
               const field = editor.fields.find((item) => item.key === config.key)!;
+              const isAiSuggestion = config.key === "attention";
+              const isManuallyEdited = editor.manuallyEditedFieldKeys.includes(
+                field.key,
+              );
               return (
-                <section key={config.key} className={!field.value ? styles.emptyHandoffField : ""}>
+                <section
+                  key={config.key}
+                  className={`${!field.value ? styles.emptyHandoffField : ""} ${isAiSuggestion ? styles.aiSuggestionField : ""}`}
+                >
                   <header>
                     <span>{String(index + 1).padStart(2, "0")}</span>
                     <div><strong>{config.label}</strong><small>{config.hint}</small></div>
-                    {!field.value && <em>待医生补充</em>}
+                    {isManuallyEdited ? (
+                      <em className={styles.manuallyProtectedField}>
+                        医生已修改 · 刷新保护
+                      </em>
+                    ) : isAiSuggestion && field.value ? (
+                      <em className={styles.aiSuggestionBadge}>
+                        AI 建议 · 待医生确认
+                      </em>
+                    ) : (
+                      !field.value && <em>待医生补充</em>
+                    )}
                   </header>
                   <textarea
                     value={field.value}
                     onChange={(event) => onFieldChange(field.key, event.target.value)}
-                    placeholder="源资料未提供，保持空白或由医生补充"
+                    placeholder={
+                      isAiSuggestion
+                        ? "AI 未给出本夜观察建议，请医生根据病情补充"
+                        : "病程原文未提供，保持空白或由医生补充"
+                    }
                     aria-label={config.label}
                   />
                   {field.evidence.length > 0 && (
                     <div className={styles.evidenceRow}>
-                      <small>原文依据</small>
+                      <small>{isAiSuggestion ? "判断依据" : "原文依据"}</small>
                       {field.evidence.map((evidence, evidenceIndex) => (
                         <button
                           type="button"
                           key={`${evidence.sourceRecordId}-${evidenceIndex}`}
                           onClick={() => onEvidence(field.label, evidence)}
                         >
-                          原文 {String(evidenceIndex + 1).padStart(2, "0")}
+                          {isAiSuggestion ? "依据" : "原文"}{" "}
+                          {String(evidenceIndex + 1).padStart(2, "0")}
                         </button>
                       ))}
                     </div>
@@ -1337,21 +1965,56 @@ function HandoffEditor({
                 </section>
               );
             })}
-            <section className={styles.supplementBlock}>
-              <header>
-                <span>＋</span>
-                <div><strong>医生补充</strong><small>核对后补充模型未覆盖的交接内容</small></div>
-              </header>
-              <textarea
-                value={editor.supplement}
-                onChange={(event) => onSupplementChange(event.target.value)}
-                placeholder="例如：家属电话已留，夜间如出现明显肿胀请及时联系……"
-                aria-label="医生补充"
-              />
-            </section>
+            {editor.customFields.map((field, index) => (
+              <section
+                key={field.id}
+                className={`${styles.customHandoffField} ${!field.value ? styles.emptyHandoffField : ""}`}
+              >
+                <header>
+                  <span>
+                    {String(extractionFieldConfig.length + index + 1).padStart(
+                      2,
+                      "0",
+                    )}
+                  </span>
+                  <div>
+                    <input
+                      value={field.label}
+                      onChange={(event) =>
+                        onCustomFieldChange(field.id, {
+                          label: event.target.value,
+                        })
+                      }
+                      aria-label="补充内容标题"
+                      maxLength={20}
+                    />
+                    <small>医生自定义补充项，将进入交班段落和打印内容</small>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.deleteHandoffFieldButton}
+                    onClick={() => onDeleteCustomField(field.id)}
+                    aria-label={`删除${field.label || "补充内容"}`}
+                    title="删除内容"
+                  >
+                    <Trash2 />
+                  </button>
+                </header>
+                <textarea
+                  value={field.value}
+                  onChange={(event) =>
+                    onCustomFieldChange(field.id, {
+                      value: event.target.value,
+                    })
+                  }
+                  placeholder="填写需要补充到本次交班的内容"
+                  aria-label={`${field.label || "补充内容"}正文`}
+                />
+              </section>
+            ))}
           </div>
           <footer className={styles.reviewFooter}>
-            <span><ShieldCheck /> AI 只做原文摘录，交班内容由医生最终核对。</span>
+            <span><ShieldCheck /> 目前病情来自分层原文摘录；注意事项仅限本夜观察，必须由医生核对。</span>
             <button type="button" onClick={onReview}>
               <CheckCircle2 /> {editor.reviewed ? "已确认无误" : "确认该患者交班"}
             </button>

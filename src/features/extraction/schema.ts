@@ -2,22 +2,59 @@ import { z } from "zod";
 
 export const extractionFieldKeys = [
   "current_condition",
-  "shift_changes",
-  "current_treatment",
-  "returned_results",
-  "pending_results",
   "attention",
-  "next_tasks",
 ] as const;
 
 export const extractionRequestSchema = z.object({
   patientId: z.string().trim().min(1).max(80),
-  templateId: z.literal("general_ward").default("general_ward"),
+  templateId: z.literal("omfs_handoff_v1").default("omfs_handoff_v1"),
   sourceMode: z.enum(["hospital_simulator", "local_file_demo"]).default(
     "hospital_simulator",
   ),
   fileName: z.string().trim().min(1).max(180).nullable().optional(),
-});
+  patient: z
+    .object({
+      id: z.string().trim().min(1).max(80),
+      encounterId: z.string().trim().min(1).max(120),
+      wardOrder: z.number().int().positive(),
+      bedNo: z.string().trim().min(1).max(20),
+      name: z.string().trim().min(1).max(80),
+      gender: z.enum(["男", "女"]),
+      age: z.number().int().min(0).max(150),
+      diagnosis: z.string().trim().min(1).max(500),
+      stageLabel: z.string().trim().min(1).max(100),
+      admissionDate: z.string().trim().min(1).max(50),
+      currentSituation: z.string().max(2_000),
+      updatedAt: z.string().trim().min(1).max(50),
+      sourceCounts: z.object({
+        records: z.number().int().nonnegative(),
+        orders: z.number().int().nonnegative(),
+        reports: z.number().int().nonnegative(),
+      }),
+    })
+    .optional(),
+  sourceRecords: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(160),
+        type: z.enum([
+          "patient_master",
+          "progress_note",
+          "order",
+          "lab",
+          "exam",
+        ]),
+        label: z.string().trim().min(1).max(180),
+        recordedAt: z.string().trim().min(1).max(50),
+        content: z.string().trim().min(1).max(30_000),
+      }),
+    )
+    .max(120)
+    .optional(),
+}).refine(
+  (input) => Boolean(input.patient) === Boolean(input.sourceRecords),
+  { message: "patient 与 sourceRecords 必须同时提供" },
+);
 
 export const extractionDraftSchema = z.object({
   fields: z

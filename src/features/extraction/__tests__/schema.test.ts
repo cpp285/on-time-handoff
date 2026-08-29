@@ -6,6 +6,7 @@ import {
   getDemoWorkspaceCharts,
   medicalDocumentTemplates,
 } from "../demo-source";
+import { buildExtractionContext } from "../extraction-context";
 import {
   extractionDraftSchema,
   extractionFieldKeys,
@@ -22,14 +23,14 @@ describe("single-patient extraction schema", () => {
       })),
     });
 
-    expect(parsed.fields).toHaveLength(7);
+    expect(parsed.fields).toHaveLength(2);
     expect(parsed.fields.every((field) => field.value === "")).toBe(true);
   });
 
   it("defaults to the hospital simulator source", () => {
     const parsed = extractionRequestSchema.parse({
       patientId: "demo-patient-12",
-      templateId: "general_ward",
+      templateId: "omfs_handoff_v1",
     });
 
     expect(parsed.sourceMode).toBe("hospital_simulator");
@@ -37,16 +38,21 @@ describe("single-patient extraction schema", () => {
 });
 
 describe("demo EMR adapter", () => {
-  it("provides five oral surgery patients in a stable ward order", () => {
+  it("provides seven oral surgery patients in a stable ward order", () => {
     const patients = getDemoPatientOptions();
-    expect(patients).toHaveLength(5);
+    expect(patients).toHaveLength(7);
     expect(patients.map((patient) => patient.bedNo)).toEqual([
       "03",
+      "05",
       "07",
+      "09",
       "12",
       "16",
       "21",
     ]);
+    expect(
+      patients.filter((patient) => patient.stageLabel === "今日新入院"),
+    ).toHaveLength(3);
   });
 
   it("uses repeatable document templates and prefilled future frameworks", () => {
@@ -70,7 +76,9 @@ describe("demo EMR adapter", () => {
     });
     expect(currentTemplateKeys).toEqual([
       "first_progress",
+      "first_progress",
       "preoperative_discussion",
+      "first_progress",
       "first_postoperative_progress",
       "postoperative_progress",
       "postoperative_progress",
@@ -92,6 +100,31 @@ describe("demo EMR adapter", () => {
     ).toBeGreaterThan(18);
   });
 
+  it("classifies admission, latest-date and preoperative records separately", () => {
+    const chart = getDemoWorkspaceCharts().find(
+      (item) => item.patient.id === "omfs-patient-07",
+    );
+    expect(chart).toBeDefined();
+    const records = chart!.documents
+      .filter((document) => document.status !== "not_started")
+      .map((document) => ({
+        id: `document-${document.key}`,
+        type: "progress_note" as const,
+        label: document.title,
+        recordedAt: document.recordedAt!,
+        content: document.content,
+      }));
+    const context = buildExtractionContext(chart!.patient, records);
+
+    expect(context.admission_record_ids).toHaveLength(1);
+    expect(context.preoperative_record_ids).toHaveLength(2);
+    expect(context.latest_record_date).toBe("2026-08-29");
+    expect(context.latest_date_record_ids).toEqual(
+      expect.arrayContaining(context.preoperative_record_ids),
+    );
+    expect(context.attention_window).toContain("仅限本夜病情观察");
+  });
+
   it("keeps every evidence quote inside the referenced source record", () => {
     for (const patient of getDemoPatientOptions()) {
       const encounter = getDemoEncounter(patient.id);
@@ -108,7 +141,49 @@ describe("demo EMR adapter", () => {
     }
   });
 
-  it("provides the seven fixed fields exactly once per patient", () => {
+  it("does not prewrite handoff notes in the electronic medical record", () => {
+    const records = getDemoWorkspaceCharts().flatMap((chart) => chart.records);
+    expect(records.map((record) => String(record.type))).not.toContain(
+      "handoff_note",
+    );
+    expect(records.some((record) => record.type === "progress_note")).toBe(true);
+  });
+
+  it("keeps handoff instructions out of every EMR document and source record", () => {
+    const handoffLanguage =
+      /夜班|交班备注|交班重点|重点观察|重点关注|明晨核对|晨间复核/;
+
+    for (const chart of getDemoWorkspaceCharts()) {
+      for (const document of chart.documents) {
+        expect(document.content).not.toMatch(handoffLanguage);
+      }
+      for (const record of chart.records) {
+        expect(record.content).not.toMatch(handoffLanguage);
+      }
+    }
+  });
+
+  it("uses progress-note facts to support a distinct AI attention suggestion", () => {
+    for (const patient of getDemoPatientOptions()) {
+      const encounter = getDemoEncounter(patient.id);
+      const currentCondition = encounter?.draft.fields.find(
+        (field) => field.key === "current_condition",
+      );
+      const attention = encounter?.draft.fields.find(
+        (field) => field.key === "attention",
+      );
+
+      expect(currentCondition?.evidence.length).toBeGreaterThan(0);
+      expect(attention?.value).toMatch(/建议.*(关注|观察|核对)/);
+      expect(attention?.value).not.toMatch(
+        /明日手术|手术方案|术前准备|备皮|禁食禁饮|送手术室|第二天/,
+      );
+      expect(attention?.evidence.length).toBeGreaterThan(0);
+      expect(attention?.value).not.toBe(attention?.evidence[0]?.quote);
+    }
+  });
+
+  it("provides the two disease-summary fields exactly once per patient", () => {
     for (const patient of getDemoPatientOptions()) {
       const keys = getDemoEncounter(patient.id)?.draft.fields.map(
         (field) => field.key,

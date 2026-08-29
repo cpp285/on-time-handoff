@@ -695,8 +695,14 @@
 
 .editorShell {
   display: grid;
-  grid-template-columns: 290px minmax(0, 1fr);
-  height: calc(100vh - 166px);
+  grid-template-columns: 232px minmax(0, 1fr);
+  height: calc(100vh - 146px);
+}
+
+.editorPage .editorTopbar {
+  min-height: 82px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .documentTimeline {
@@ -706,9 +712,10 @@
 }
 
 .documentTimeline > header {
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  padding: 18px;
+  padding: 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -943,7 +950,7 @@
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   min-width: 0;
-  padding: 24px clamp(24px, 4vw, 70px) 18px;
+  padding: 18px clamp(18px, 2vw, 34px) 14px;
   overflow: hidden;
 }
 
@@ -1180,100 +1187,109 @@
 
 .handoffEditorShell {
   display: grid;
-  grid-template-columns: minmax(270px, 0.72fr) minmax(560px, 1.7fr);
-  height: calc(100vh - 166px);
+  grid-template-columns: 310px minmax(0, 1fr);
+  min-height: calc(100vh - 166px);
+  background: #f5f8fc;
 }
 
 .handoffPatientInfo {
   position: relative;
-  padding: 38px 28px;
+  padding: 28px 24px;
   overflow: hidden;
-  color: #f7f3e8;
-  background: var(--ink-900);
+  color: #273142;
+  background: #f7faff;
+  border-right: 1px solid var(--line);
 }
 
 .largeOrder {
   position: absolute;
-  right: -7px;
-  top: -25px;
-  color: rgba(255, 255, 255, 0.055);
+  right: -3px;
+  top: -18px;
+  color: rgba(47, 111, 237, 0.05);
   font-family: var(--font-display);
-  font-size: 150px;
+  font-size: 118px;
   font-weight: 800;
 }
 
 .handoffPatientInfo > small {
-  color: #f0c766;
+  color: var(--signal);
   font-family: var(--font-data);
   font-size: 8px;
   letter-spacing: 0.14em;
 }
 
 .handoffPatientInfo h2 {
-  margin: 10px 0 3px;
-  font-family: var(--font-display);
-  font-size: 34px;
+  margin: 10px 0 4px;
+  font-family: var(--font-body);
+  font-size: 27px;
 }
 
 .handoffPatientInfo > p {
   margin: 0;
-  color: #b9d6ca;
-  font-size: 12px;
+  color: #3769c5;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
 }
 
 .handoffPatientInfo dl {
-  margin: 30px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  margin: 22px 0 0;
+  border-top: 1px solid var(--line);
 }
 
 .handoffPatientInfo dl > div {
   display: grid;
-  grid-template-columns: 80px 1fr;
-  padding: 11px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  grid-template-columns: 86px 1fr;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .handoffPatientInfo dt {
-  color: rgba(255, 255, 255, 0.42);
-  font-size: 8px;
+  color: #8a95a5;
+  font-size: 10px;
 }
 
 .handoffPatientInfo dd {
   margin: 0;
-  font-size: 9px;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 650;
 }
 
 .paragraphPreview {
-  margin-top: 28px;
-  padding: 15px;
-  color: var(--ink-950);
-  background: #f0c766;
+  margin-top: 22px;
+  padding: 15px 16px;
+  color: #273142;
+  background: #edf4ff;
+  border: 1px solid #d9e6fa;
+  border-radius: 5px;
 }
 
 .paragraphPreview small {
   font-family: var(--font-data);
-  font-size: 7px;
+  color: #3769c5;
+  font-size: 9px;
   font-weight: 750;
 }
 
 .paragraphPreview p {
   margin: 7px 0 0;
-  font-size: 9px;
-  line-height: 1.75;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .handoffForm {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto auto;
+  align-content: start;
   min-width: 0;
-  overflow: hidden;
-  background: var(--paper);
+  background: #fff;
 }
 
 .handoffForm > header {
   justify-content: space-between;
-  min-height: 58px;
-  padding: 0 22px;
+  min-height: 64px;
+  padding: 0 20px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -1281,51 +1297,137 @@
 .handoffForm > header > span {
   gap: 6px;
   color: var(--ink-950);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 750;
 }
 
 .handoffForm > header svg {
-  width: 14px;
+  width: 16px;
+}
+
+.handoffHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inlineSourceChanged {
+  padding: 4px 7px;
+  color: #8a4b00;
+  font-size: 8px;
+  font-style: normal;
+  background: #fff0cf;
+  border: 1px solid #efbd65;
+  border-radius: 3px;
+}
+
+.refreshPatientButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 5px 10px;
+  color: #4c5b70;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.refreshPatientButton > span {
+  display: grid;
+  gap: 1px;
+  text-align: left;
+}
+
+.refreshPatientButton strong {
+  color: inherit;
+  font-size: 10px;
+}
+
+.refreshPatientButton small {
+  color: #8d98a9;
+  font-size: 7px;
+}
+
+.refreshPatientButtonActive {
+  color: #8a4b00;
+  background: #fff7e8;
+  border-color: #efbd65;
+}
+
+.refreshPatientButton:hover:not(:disabled) {
+  color: var(--signal);
+  background: #edf4ff;
+  border-color: #aac5f5;
+}
+
+.refreshPatientButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.addHandoffFieldButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
+  color: var(--signal);
+  font-size: 11px;
+  font-weight: 750;
+  background: #edf4ff;
+  border: 1px solid #d5e3fa;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.addHandoffFieldButton:hover {
+  background: #e2edff;
+  border-color: #aac5f5;
 }
 
 .handoffFields {
   display: grid;
-  gap: 10px;
-  padding: 18px 22px 30px;
-  overflow-y: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-content: start;
+  padding: 18px 20px;
 }
 
 .handoffFields > section {
   background: var(--surface);
   border: 1px solid var(--line);
+  border-radius: 5px;
 }
 
 .handoffFields > section > header {
-  gap: 9px;
-  padding: 9px 11px 6px;
+  gap: 10px;
+  min-height: 54px;
+  padding: 11px 13px 8px;
 }
 
 .handoffFields > section > header > span {
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 27px;
-  height: 27px;
+  width: 31px;
+  height: 31px;
   color: #fff;
   font-family: var(--font-data);
-  font-size: 8px;
-  background: var(--ink-800);
+  font-size: 9px;
+  background: var(--signal);
+  border-radius: 3px;
 }
 
 .handoffFields > section > header strong {
   color: var(--ink-950);
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .handoffFields > section > header small {
   color: var(--muted);
-  font-size: 7px;
+  margin-top: 2px;
+  font-size: 9px;
 }
 
 .handoffFields > section > header em {
@@ -1333,21 +1435,52 @@
   padding: 4px 6px;
   color: #8b5b08;
   font-family: var(--font-data);
-  font-size: 7px;
+  font-size: 8px;
   font-style: normal;
   background: #f5dfa7;
 }
 
+.handoffFields > section > header .manuallyProtectedField {
+  color: #167657;
+  background: #e9f7f1;
+  border: 1px solid #a9dbc8;
+  border-radius: 3px;
+}
+
+.handoffFields > section > header .aiSuggestionBadge {
+  color: #245fc5;
+  background: #eaf2ff;
+  border: 1px solid #b8cef5;
+  border-radius: 3px;
+}
+
+.handoffFields .aiSuggestionField {
+  background: #f9fbff;
+  border-color: #b8cef5;
+  box-shadow: inset 3px 0 #2f6fed;
+}
+
+.handoffFields .aiSuggestionField > textarea {
+  background: #f4f7fd;
+  border-color: #dce6f6;
+}
+
+.handoffFields .aiSuggestionField .evidenceRow button {
+  color: #245fc5;
+  background: #eaf2ff;
+  border-color: #b8cef5;
+}
+
 .handoffFields > section > textarea {
   display: block;
-  width: calc(100% - 22px);
-  min-height: 62px;
-  margin: 0 11px 9px;
-  padding: 9px 10px;
+  width: calc(100% - 26px);
+  min-height: 118px;
+  margin: 0 13px 11px;
+  padding: 12px 13px;
   resize: vertical;
   color: var(--text);
-  font-size: 11px;
-  line-height: 1.65;
+  font-size: 14px;
+  line-height: 1.7;
   background: #f6f3eb;
   border: 1px solid transparent;
   outline: 0;
@@ -1371,22 +1504,22 @@
 
 .evidenceRow {
   flex-wrap: wrap;
-  gap: 5px;
-  padding: 0 11px 9px;
+  gap: 6px;
+  padding: 0 13px 11px;
 }
 
 .evidenceRow small {
   margin-right: 3px;
   color: var(--muted);
   font-family: var(--font-data);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .evidenceRow button {
   padding: 3px 6px;
   color: var(--ink-800);
   font-family: var(--font-data);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 750;
   background: #e2eee7;
   border: 1px solid #bdd0c5;
@@ -1397,11 +1530,61 @@
   border: 1px solid #d7a249;
 }
 
+.handoffFields .customHandoffField {
+  border-color: #b9cff4;
+}
+
+.customHandoffField > header > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.customHandoffField > header input {
+  width: 100%;
+  padding: 2px 5px;
+  color: #273142;
+  font-size: 14px;
+  font-weight: 750;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  outline: 0;
+}
+
+.customHandoffField > header input:hover,
+.customHandoffField > header input:focus {
+  background: #fff;
+  border-color: #aac5f5;
+}
+
+.deleteHandoffFieldButton {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  color: #97a2b2;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.deleteHandoffFieldButton:hover {
+  color: #c23f3f;
+  background: #fff6f6;
+  border-color: #efc0c0;
+}
+
+.deleteHandoffFieldButton svg {
+  width: 14px;
+}
+
 .reviewFooter {
   justify-content: space-between;
   gap: 20px;
-  min-height: 62px;
-  padding: 9px 18px;
+  min-height: 68px;
+  padding: 10px 20px;
   background: var(--surface);
   border-top: 1px solid var(--line-strong);
 }
@@ -1409,7 +1592,7 @@
 .reviewFooter > span {
   gap: 6px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .reviewFooter > span svg {
@@ -1419,9 +1602,9 @@
 
 .reviewFooter button {
   gap: 6px;
-  padding: 10px 14px;
+  padding: 11px 16px;
   color: #fff;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   background: var(--ink-800);
   border: 0;
@@ -1752,10 +1935,12 @@
 }
 
 .patientGrid {
-  gap: 14px;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 12px;
 }
 
 .patientCard {
+  min-height: 154px;
   background: #fff;
   border-color: var(--line);
   border-radius: 5px;
@@ -1769,8 +1954,49 @@
 }
 
 .patientCard > header {
+  min-height: 42px;
+  padding: 8px 13px 8px 16px;
   background: #f8faff;
   border-bottom-color: var(--line);
+}
+
+.compactBedNo {
+  color: var(--signal);
+  font-family: var(--font-data);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.compactPatientInfo {
+  display: grid;
+  gap: 10px;
+  padding: 16px 16px 18px;
+}
+
+.compactPatientInfo > span {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.compactPatientInfo b {
+  color: #273142;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.compactPatientInfo small {
+  color: #8b96a7;
+  font-size: 9px;
+}
+
+.compactPatientInfo h2 {
+  min-height: 0;
+  margin: 0;
+  color: #3769c5;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .orderIndex {
@@ -1779,16 +2005,42 @@
 }
 
 .stageBadge,
-.savedDocument,
-.reviewedStatus {
+.savedDocument {
   color: #2464d8;
   background: #eaf2ff;
 }
 
-.reviewStatus,
 .pendingDocument {
   color: #667085;
   background: #f1f4f8;
+}
+
+.reviewStatus,
+.reviewedStatus {
+  padding: 7px 10px;
+  font-size: 9px;
+  font-weight: 800;
+  border: 1px solid;
+  border-radius: 4px;
+}
+
+.reviewStatus {
+  color: #8a4b00;
+  background: #fff0cf;
+  border-color: #efbd65;
+}
+
+.reviewedStatus {
+  color: #fff;
+  background: #16845f;
+  border-color: #16845f;
+  box-shadow: 0 3px 9px rgba(22, 132, 95, 0.2);
+}
+
+.reviewStatus svg,
+.reviewedStatus svg {
+  width: 14px;
+  stroke-width: 2.4;
 }
 
 .patientTitle > strong {
@@ -1821,10 +2073,24 @@
 }
 
 .backButton {
-  color: #687386;
-  background: #f7f9fc;
-  border-color: var(--line);
+  padding: 10px 13px;
+  color: #245fc5;
+  font-size: 10px;
+  font-weight: 750;
+  background: #edf4ff;
+  border-color: #aac5f5;
   border-radius: 4px;
+}
+
+.backButton:hover {
+  color: #174b9f;
+  background: #e1ecff;
+  border-color: #78a3ee;
+}
+
+.backButton svg {
+  width: 16px;
+  stroke-width: 2.3;
 }
 
 .editorTopbar > div > span {
@@ -1924,7 +2190,111 @@
   border-radius: 4px;
 }
 
-.handoffPatientInfo,
+.handoffTemplateBar {
+  display: grid;
+  grid-template-columns: 40px auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin: 18px 0 0;
+  padding: 13px 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.savedHandoffNotice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  color: #167657;
+  font-size: 9px;
+  font-weight: 750;
+  background: #e9f7f1;
+  border: 1px solid #a9dbc8;
+  border-radius: 4px;
+}
+
+.savedHandoffNotice svg {
+  width: 14px;
+}
+
+.handoffCardStatuses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.sourceChangedStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  color: #8a4b00;
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  background: #fff0cf;
+  border: 1px solid #efbd65;
+  border-radius: 4px;
+}
+
+.sourceChangedStatus svg {
+  width: 12px;
+}
+
+.handoffTemplateBar > span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--signal);
+  background: #edf4ff;
+  border-radius: 5px;
+}
+
+.handoffTemplateBar > span svg {
+  width: 17px;
+}
+
+.handoffTemplateBar > div {
+  display: grid;
+  gap: 2px;
+  min-width: 190px;
+}
+
+.handoffTemplateBar small {
+  color: #8c97a8;
+  font-size: 8px;
+}
+
+.handoffTemplateBar strong {
+  color: #344054;
+  font-size: 10px;
+}
+
+.handoffTemplateBar ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.handoffTemplateBar li {
+  padding: 5px 8px;
+  color: #4d6fae;
+  font-size: 8px;
+  background: #f2f6fd;
+  border: 1px solid #e0e9f7;
+  border-radius: 3px;
+}
+
 .handoffForm,
 .handoffFields > section {
   background: #fff;
@@ -2150,6 +2520,306 @@
   text-decoration: none;
 }
 
+.dialogBackdrop {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  overflow-y: auto;
+  background: rgba(24, 39, 64, 0.38);
+  backdrop-filter: blur(3px);
+}
+
+.patientDialog {
+  width: min(720px, 100%);
+  overflow: hidden;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid #d9e2ef;
+  border-radius: 7px;
+  box-shadow: 0 24px 70px rgba(28, 48, 79, 0.22);
+}
+
+.patientDialog > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px 18px;
+  background: #f8faff;
+  border-bottom: 1px solid var(--line);
+}
+
+.patientDialog > header > span {
+  display: grid;
+  gap: 3px;
+}
+
+.patientDialog header small {
+  color: var(--signal);
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.patientDialog header strong {
+  color: #273142;
+  font-size: 21px;
+}
+
+.patientDialog header p {
+  margin: 2px 0 0;
+  color: #8792a3;
+  font-size: 10px;
+}
+
+.patientDialog > header > button {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: #748094;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.patientDialog > header > button:hover {
+  color: var(--signal);
+  border-color: #a9c3f4;
+}
+
+.patientDialog > header svg {
+  width: 15px;
+}
+
+.patientDialog form {
+  padding: 22px 24px 20px;
+}
+
+.patientFormGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px 12px;
+}
+
+.patientFormGrid label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.patientFormGrid label:first-child {
+  grid-column: span 2;
+}
+
+.patientFormGrid label > span {
+  color: #596579;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.patientFormGrid input,
+.patientFormGrid select,
+.patientFormGrid textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 11px;
+  color: #273142;
+  font: inherit;
+  font-size: 11px;
+  background: #fff;
+  border: 1px solid #dce3ec;
+  border-radius: 4px;
+  outline: 0;
+}
+
+.patientFormGrid input,
+.patientFormGrid select {
+  min-height: 40px;
+}
+
+.patientFormGrid textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.patientFormGrid input:focus,
+.patientFormGrid select:focus,
+.patientFormGrid textarea:focus {
+  border-color: #82aaf2;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.1);
+}
+
+.patientFormGrid .fullField {
+  grid-column: 1 / -1;
+}
+
+.formError {
+  margin: 12px 0 0;
+  padding: 8px 10px;
+  color: #b23b2c;
+  font-size: 9px;
+  background: #fff3f1;
+  border-left: 3px solid #d15343;
+}
+
+.patientDialog form > footer,
+.patientDialog form > footer > span,
+.patientDialog form > footer > div,
+.patientDialog form > footer button {
+  display: flex;
+  align-items: center;
+}
+
+.patientDialog form > footer {
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.patientDialog form > footer > span {
+  gap: 5px;
+  color: #8a95a6;
+  font-size: 8px;
+}
+
+.patientDialog form > footer > span svg {
+  width: 13px;
+  color: #20a779;
+}
+
+.patientDialog form > footer > div {
+  gap: 8px;
+}
+
+.patientDialog form > footer button {
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 13px;
+  color: #596579;
+  font-size: 9px;
+  font-weight: 750;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.patientDialog form > footer button[type="submit"] {
+  color: #fff;
+  background: var(--signal);
+  border-color: var(--signal);
+}
+
+.patientDialog form > footer button svg {
+  width: 14px;
+}
+
+.printGuardDialog {
+  width: min(560px, 100%);
+}
+
+.printGuardDialog > header {
+  border-top: 4px solid #e5a52f;
+}
+
+.printGuardBody {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 16px;
+  padding: 24px;
+}
+
+.printGuardBody > div {
+  min-width: 0;
+}
+
+.printGuardIcon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  color: #9a5d00;
+  background: #fff0cf;
+  border: 1px solid #efbd65;
+  border-radius: 8px;
+}
+
+.printGuardIcon svg {
+  width: 26px;
+}
+
+.printGuardBody strong {
+  color: #263245;
+  font-size: 18px;
+}
+
+.printGuardBody p {
+  margin: 8px 0 14px;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.printGuardProgress {
+  height: 8px;
+  overflow: hidden;
+  background: #e9edf3;
+  border-radius: 999px;
+}
+
+.printGuardProgress i {
+  display: block;
+  height: 100%;
+  background: var(--success);
+  border-radius: inherit;
+  transition: width 180ms ease;
+}
+
+.printGuardFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 16px 24px 20px;
+  background: #f8faff;
+  border-top: 1px solid var(--line);
+}
+
+.printGuardFooter button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 14px;
+  color: #566176;
+  font-size: 10px;
+  font-weight: 800;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.printGuardFooter button:last-child {
+  color: #fff;
+  background: var(--signal);
+  border-color: var(--signal);
+}
+
+.printGuardFooter button svg {
+  width: 15px;
+}
+
 .printBoard {
   display: none;
 }
@@ -2283,6 +2953,56 @@
 
   .syncedPatientList article > div:nth-of-type(2) {
     display: none;
+  }
+
+  .dialogBackdrop {
+    place-items: start center;
+    padding: 12px;
+  }
+
+  .patientDialog > header,
+  .patientDialog form {
+    padding: 17px;
+  }
+
+  .patientFormGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .patientFormGrid label:first-child,
+  .patientFormGrid .fullField {
+    grid-column: 1 / -1;
+  }
+
+  .patientDialog form > footer {
+    display: grid;
+  }
+
+  .patientDialog form > footer > div {
+    justify-content: flex-end;
+  }
+
+  .printGuardBody {
+    grid-template-columns: 42px minmax(0, 1fr);
+    padding: 18px 17px;
+  }
+
+  .printGuardIcon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .printGuardFooter {
+    padding: 14px 17px 17px;
+  }
+
+  .handoffTemplateBar {
+    grid-template-columns: 36px 1fr;
+  }
+
+  .handoffTemplateBar ul {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 
   .editorTopbar {

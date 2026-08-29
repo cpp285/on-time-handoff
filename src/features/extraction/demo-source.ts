@@ -11,6 +11,14 @@ interface DemoEncounter extends SourceSystemChart {
   draft: ExtractionDraft;
 }
 
+interface DemoDraftFixture {
+  fields: Array<{
+    key: string;
+    value: string;
+    evidence: Array<{ source_record_id: string; quote: string }>;
+  }>;
+}
+
 interface OralSurgeryCase {
   patient: SourceSystemPatient;
   stageIndex: number;
@@ -105,7 +113,7 @@ const cases: OralSurgeryCase[] = [
     patient: {
       id: "omfs-patient-07",
       encounterId: "OMFS20260825007",
-      wardOrder: 2,
+      wardOrder: 3,
       bedNo: "07",
       name: "梁先生",
       gender: "男",
@@ -144,7 +152,7 @@ const cases: OralSurgeryCase[] = [
     patient: {
       id: "omfs-patient-12",
       encounterId: "OMFS20260824012",
-      wardOrder: 3,
+      wardOrder: 5,
       bedNo: "12",
       name: "周女士",
       gender: "女",
@@ -186,7 +194,7 @@ const cases: OralSurgeryCase[] = [
     patient: {
       id: "omfs-patient-16",
       encounterId: "OMFS20260801016",
-      wardOrder: 4,
+      wardOrder: 6,
       bedNo: "16",
       name: "陈先生",
       gender: "男",
@@ -229,7 +237,7 @@ const cases: OralSurgeryCase[] = [
     patient: {
       id: "omfs-patient-21",
       encounterId: "OMFS20260821021",
-      wardOrder: 5,
+      wardOrder: 7,
       bedNo: "21",
       name: "顾女士",
       gender: "女",
@@ -268,6 +276,84 @@ const cases: OralSurgeryCase[] = [
       "左面中部肿胀较术后即刻略加重，疼痛评分3分，口内创面无渗血，体温正常，可进流质。",
     postoperativeDay3:
       "左面中部肿胀较前明显减轻，无发热及鼻腔溢液，口内创面清洁，碘仿纱条已部分退出约1cm。病理结果尚未回报。",
+  },
+  {
+    patient: {
+      id: "omfs-patient-05",
+      encounterId: "OMFS20260829005",
+      wardOrder: 2,
+      bedNo: "05",
+      name: "王先生",
+      gender: "男",
+      age: 45,
+      diagnosis: "右颌下区肿物性质待查",
+      stageLabel: "今日新入院",
+      admissionDate: "2026-08-29",
+      currentSituation: "右颌下区肿物近期增大，已完成入院问诊，等待超声及增强CT检查。",
+      updatedAt: "2026-08-29T17:42:00+08:00",
+      sourceCounts: { records: 2, orders: 2, reports: 1 },
+    },
+    stageIndex: 1,
+    complaint: "发现右颌下区无痛性肿物4个月，近期增大。",
+    presentIllness:
+      "患者4个月前偶然发现右颌下区约蚕豆大小肿物，无疼痛、发热及进食不适，近3周自觉肿物增大。门诊触诊后建议进一步影像检查，为明确诊断收入院。",
+    pastHistory: "既往体健，否认高血压、糖尿病及药物过敏史，无颌面颈部手术史。",
+    specialtyExam:
+      "右颌下区触及约2.5cm×2.0cm肿物，质中、边界尚清、活动度可，无明显压痛；口底黏膜完整，舌活动正常。",
+    auxiliaryExam:
+      "门诊超声提示右颌下区实性低回声结节，血流信号少；入院血常规及凝血功能未见明显异常。",
+    diagnosis: "右颌下区肿物性质待查。",
+    differential: "需与颌下腺良性肿瘤、淋巴结病变及神经源性肿瘤鉴别。",
+    plan: "完善颌面颈部增强CT及颌下区超声，必要时行细针穿刺，根据结果制定治疗方案。",
+    operationName: "待定",
+    anesthesia: "待定",
+    operationFindings: "尚未手术。",
+    operationProcess: "尚未手术。",
+    bloodLoss: "—",
+    drainage: "—",
+    specimen: "—",
+    postoperativeStatus: "—",
+    postoperativeDay1: "—",
+    postoperativeDay3: "—",
+  },
+  {
+    patient: {
+      id: "omfs-patient-09",
+      encounterId: "OMFS20260829009",
+      wardOrder: 4,
+      bedNo: "09",
+      name: "赵女士",
+      gender: "女",
+      age: 52,
+      diagnosis: "左颊黏膜白斑伴溃疡待查",
+      stageLabel: "今日新入院",
+      admissionDate: "2026-08-29",
+      currentSituation: "左颊黏膜白色斑块伴局部溃疡，拟完善活检及相关术前检查。",
+      updatedAt: "2026-08-29T18:05:00+08:00",
+      sourceCounts: { records: 2, orders: 2, reports: 1 },
+    },
+    stageIndex: 1,
+    complaint: "左颊黏膜白色斑块2年，局部破溃1个月。",
+    presentIllness:
+      "患者2年前发现左颊黏膜白色斑块，无明显疼痛，未系统治疗。近1个月局部反复破溃，进食刺激性食物时疼痛，为进一步活检及治疗收入院。",
+    pastHistory: "高脂血症病史3年，饮食控制；否认药物过敏及口腔颌面部手术史。",
+    specialtyExam:
+      "左颊黏膜见约2.8cm×1.8cm不规则白色斑块，前缘见约0.6cm浅表溃疡，基底稍硬，无活动性出血，张口度正常。",
+    auxiliaryExam:
+      "门诊口腔影像未见明确颌骨破坏；入院血常规、肝肾功能及凝血功能未见明显异常。",
+    diagnosis: "左颊黏膜白斑伴溃疡性质待查。",
+    differential: "需与口腔扁平苔藓、慢性创伤性溃疡及黏膜上皮异常增生鉴别。",
+    plan: "完善术前评估，局部活检送病理，根据病理结果决定后续扩大切除范围。",
+    operationName: "左颊黏膜病变活检术",
+    anesthesia: "局部麻醉",
+    operationFindings: "尚未手术。",
+    operationProcess: "尚未手术。",
+    bloodLoss: "—",
+    drainage: "—",
+    specimen: "—",
+    postoperativeStatus: "—",
+    postoperativeDay1: "—",
+    postoperativeDay3: "—",
   },
 ];
 
@@ -426,7 +512,7 @@ function createDocuments(caseData: OralSurgeryCase): MedicalDocument[] {
     content?: string,
   ) => docs.push(completedDocument(caseData, templateKey, title, date, legacyKey, docs.length, status, content));
 
-  if (p.id === "omfs-patient-03") {
+  if (caseData.stageIndex === 1) {
     addBase("admission_record", "入院记录", isoAt(29), "admission_record");
     addBase("first_progress", "首次病程记录", isoAt(29, 11), "first_progress", "current");
     docs.push(futureDocument(caseData, "routine_progress", "次日病程记录", docs.length));
@@ -490,13 +576,22 @@ function createDocuments(caseData: OralSurgeryCase): MedicalDocument[] {
 function makeEncounter(
   caseData: OralSurgeryCase,
   records: ExtractionSourceRecord[],
-  draft: ExtractionDraft,
+  draft: DemoDraftFixture,
 ): DemoEncounter {
+  const fields = draft.fields
+    .filter(
+      (field) =>
+        field.key === "current_condition" || field.key === "attention",
+    )
+    .map((field) => ({
+      ...field,
+      key: field.key as ExtractionDraft["fields"][number]["key"],
+    }));
   return {
     patient: caseData.patient,
     documents: createDocuments(caseData),
     records,
-    draft,
+    draft: { fields },
   };
 }
 
@@ -508,17 +603,11 @@ const encounters: DemoEncounter[] = [
       { id: "omfs-03-order", type: "order", label: "今日医嘱", recordedAt: "2026-08-29T11:20:00+08:00", content: "完善下颌骨增强CT及胸部CT；明日上午行局部活检术前评估。" },
       { id: "omfs-03-exam", type: "exam", label: "外院影像", recordedAt: "2026-08-29T09:40:00+08:00", content: "外院曲面断层片示左下颌第一磨牙至下颌角区多房性透射影，边界较清。" },
       { id: "omfs-03-pending", type: "exam", label: "检查状态", recordedAt: "2026-08-29T17:30:00+08:00", content: "下颌骨增强CT已预约，状态：待检查；组织病理尚未取材。" },
-      { id: "omfs-03-note", type: "handoff_note", label: "交班备注", recordedAt: "2026-08-29T18:20:00+08:00", content: "夜班关注下颌局部疼痛、肿胀及下唇麻木变化；明晨核对增强CT安排。" },
     ],
     {
       fields: [
         { key: "current_condition", value: "今日新入院，左下颌磨牙区骨板膨隆，无压痛，左下唇感觉存在，一般情况可。", evidence: [{ source_record_id: "omfs-03-progress", quote: "今日新入院，左下颌磨牙区颊侧骨板膨隆约3.0cm×2.0cm，无压痛，左下唇感觉存在。一般情况可" }] },
-        { key: "shift_changes", value: "今日完成入院评估。", evidence: [{ source_record_id: "omfs-03-progress", quote: "今日新入院" }] },
-        { key: "current_treatment", value: "完善下颌骨增强CT及胸部CT，明日上午行局部活检术前评估。", evidence: [{ source_record_id: "omfs-03-order", quote: "完善下颌骨增强CT及胸部CT；明日上午行局部活检术前评估" }] },
-        { key: "returned_results", value: "外院曲面断层片示左下颌多房性透射影，边界较清。", evidence: [{ source_record_id: "omfs-03-exam", quote: "左下颌第一磨牙至下颌角区多房性透射影，边界较清" }] },
-        { key: "pending_results", value: "下颌骨增强CT待检查，组织病理尚未取材。", evidence: [{ source_record_id: "omfs-03-pending", quote: "下颌骨增强CT已预约，状态：待检查；组织病理尚未取材" }] },
-        { key: "attention", value: "夜班关注下颌局部疼痛、肿胀及下唇麻木变化。", evidence: [{ source_record_id: "omfs-03-note", quote: "夜班关注下颌局部疼痛、肿胀及下唇麻木变化" }] },
-        { key: "next_tasks", value: "明晨核对增强CT安排。", evidence: [{ source_record_id: "omfs-03-note", quote: "明晨核对增强CT安排" }] },
+        { key: "attention", value: "建议夜班关注左下颌局部疼痛、肿胀及下唇感觉变化。", evidence: [{ source_record_id: "omfs-03-progress", quote: "左下颌磨牙区颊侧骨板膨隆约3.0cm×2.0cm，无压痛，左下唇感觉存在" }] },
       ],
     },
   ),
@@ -528,17 +617,11 @@ const encounters: DemoEncounter[] = [
       { id: "omfs-07-progress", type: "progress_note", label: "术前讨论记录", recordedAt: "2026-08-29T16:10:00+08:00", content: "患者一般情况稳定，右舌缘病灶无明显出血。今日完成术前讨论及麻醉访视，手术方案已向患者及家属说明。" },
       { id: "omfs-07-order", type: "order", label: "术前医嘱", recordedAt: "2026-08-29T17:20:00+08:00", content: "今晚22:00后禁食、次日02:00后禁饮；明日08:00送手术室。继续监测血压。" },
       { id: "omfs-07-lab", type: "lab", label: "术前检验", recordedAt: "2026-08-29T14:30:00+08:00", content: "血红蛋白132g/L，血小板218×10⁹/L，凝血功能及肝肾功能未见明显异常。" },
-      { id: "omfs-07-note", type: "handoff_note", label: "交班备注", recordedAt: "2026-08-29T18:00:00+08:00", content: "夜班核对禁食禁饮执行情况、备皮及腕带信息；明晨交接手术资料后送手术室。" },
     ],
     {
       fields: [
         { key: "current_condition", value: "一般情况稳定，右舌缘病灶无明显出血。", evidence: [{ source_record_id: "omfs-07-progress", quote: "患者一般情况稳定，右舌缘病灶无明显出血" }] },
-        { key: "shift_changes", value: "今日完成术前讨论及麻醉访视。", evidence: [{ source_record_id: "omfs-07-progress", quote: "今日完成术前讨论及麻醉访视" }] },
-        { key: "current_treatment", value: "今晚22:00后禁食、次日02:00后禁饮，继续监测血压。", evidence: [{ source_record_id: "omfs-07-order", quote: "今晚22:00后禁食、次日02:00后禁饮" }, { source_record_id: "omfs-07-order", quote: "继续监测血压" }] },
-        { key: "returned_results", value: "血红蛋白132g/L，血小板218×10⁹/L，凝血及肝肾功能未见明显异常。", evidence: [{ source_record_id: "omfs-07-lab", quote: "血红蛋白132g/L，血小板218×10⁹/L，凝血功能及肝肾功能未见明显异常" }] },
-        { key: "pending_results", value: "", evidence: [] },
-        { key: "attention", value: "夜班核对禁食禁饮执行情况、备皮及腕带信息。", evidence: [{ source_record_id: "omfs-07-note", quote: "夜班核对禁食禁饮执行情况、备皮及腕带信息" }] },
-        { key: "next_tasks", value: "明晨交接手术资料，08:00送手术室。", evidence: [{ source_record_id: "omfs-07-note", quote: "明晨交接手术资料后送手术室" }, { source_record_id: "omfs-07-order", quote: "明日08:00送手术室" }] },
+        { key: "attention", value: "建议夜班关注右舌缘病灶有无出血变化。", evidence: [{ source_record_id: "omfs-07-progress", quote: "患者一般情况稳定，右舌缘病灶无明显出血" }] },
       ],
     },
   ),
@@ -549,17 +632,11 @@ const encounters: DemoEncounter[] = [
       { id: "omfs-12-order", type: "order", label: "术后医嘱", recordedAt: "2026-08-29T18:12:00+08:00", content: "术后一级护理；头孢呋辛1.5g静滴 q12h；记录左耳后负压引流量及颜色。" },
       { id: "omfs-12-drain", type: "progress_note", label: "引流观察", recordedAt: "2026-08-29T18:30:00+08:00", content: "左耳后负压引流管在位通畅，术后引流淡血性液约15ml。" },
       { id: "omfs-12-pending", type: "lab", label: "病理状态", recordedAt: "2026-08-29T17:50:00+08:00", content: "左腮腺浅叶肿物已送常规病理，结果未回。" },
-      { id: "omfs-12-note", type: "handoff_note", label: "交班备注", recordedAt: "2026-08-29T18:32:00+08:00", content: "夜班观察面神经功能、切口渗血及负压引流量；如敷料渗湿及时联系值班医师。" },
     ],
     {
       fields: [
         { key: "current_condition", value: "术后神志清，生命体征平稳；左侧面神经功能可，切口敷料干燥。", evidence: [{ source_record_id: "omfs-12-progress", quote: "神志清，生命体征平稳；左侧额纹、闭眼及口角活动可，切口敷料干燥" }] },
-        { key: "shift_changes", value: "今日完成左腮腺浅叶切除术及面神经解剖术，18:00安返病房。", evidence: [{ source_record_id: "omfs-12-progress", quote: "今日完成左腮腺浅叶切除术及面神经解剖术。18:00安返病房" }] },
-        { key: "current_treatment", value: "术后一级护理，头孢呋辛1.5g静滴q12h，记录负压引流。", evidence: [{ source_record_id: "omfs-12-order", quote: "术后一级护理；头孢呋辛1.5g静滴 q12h；记录左耳后负压引流量及颜色" }] },
-        { key: "returned_results", value: "", evidence: [] },
-        { key: "pending_results", value: "左腮腺肿物常规病理结果未回。", evidence: [{ source_record_id: "omfs-12-pending", quote: "左腮腺浅叶肿物已送常规病理，结果未回" }] },
-        { key: "attention", value: "夜班观察面神经功能、切口渗血及负压引流量。", evidence: [{ source_record_id: "omfs-12-note", quote: "夜班观察面神经功能、切口渗血及负压引流量" }] },
-        { key: "next_tasks", value: "持续记录左耳后负压引流量及颜色。", evidence: [{ source_record_id: "omfs-12-order", quote: "记录左耳后负压引流量及颜色" }] },
+        { key: "attention", value: "建议夜班关注面神经功能、切口渗血以及负压引流量和颜色变化。", evidence: [{ source_record_id: "omfs-12-progress", quote: "左侧额纹、闭眼及口角活动可，切口敷料干燥" }, { source_record_id: "omfs-12-drain", quote: "左耳后负压引流管在位通畅，术后引流淡血性液约15ml" }] },
       ],
     },
   ),
@@ -571,17 +648,11 @@ const encounters: DemoEncounter[] = [
       { id: "omfs-16-order", type: "order", label: "恢复期医嘱", recordedAt: "2026-08-29T11:00:00+08:00", content: "加强口腔护理；每日开展吞咽和语言功能训练；监测血糖并评估饮食过渡。" },
       { id: "omfs-16-lab", type: "lab", label: "今日检验", recordedAt: "2026-08-29T15:20:00+08:00", content: "血红蛋白116g/L，白细胞7.9×10⁹/L，血钾4.0mmol/L。" },
       { id: "omfs-16-pending", type: "lab", label: "病理状态", recordedAt: "2026-08-29T16:40:00+08:00", content: "原发灶补充免疫组化及左颈淋巴结分区结果未回。" },
-      { id: "omfs-16-note", type: "handoff_note", label: "交班备注", recordedAt: "2026-08-29T18:20:00+08:00", content: "夜班关注口底及颈部创面、误吸风险和进食耐受；晨间复核血糖并记录功能训练完成情况。" },
     ],
     {
       fields: [
         { key: "current_condition", value: "术后第18日，呼吸平稳，皮瓣色泽正常，口底及颈部创面恢复中。", evidence: [{ source_record_id: "omfs-16-progress", quote: "术后第18日，患者一般情况稳定，气管套管已拔除，呼吸平稳。皮瓣色泽正常，口底及颈部创面恢复中" }] },
-        { key: "shift_changes", value: "颈部引流管已拔除，口底创面无新发渗血；空腹血糖8.6mmol/L。", evidence: [{ source_record_id: "omfs-16-drain", quote: "颈部引流管已拔除，口底创面无新发渗血；今日空腹血糖8.6mmol/L" }] },
-        { key: "current_treatment", value: "加强口腔护理，每日开展吞咽和语言功能训练，监测血糖。", evidence: [{ source_record_id: "omfs-16-order", quote: "加强口腔护理；每日开展吞咽和语言功能训练；监测血糖并评估饮食过渡" }] },
-        { key: "returned_results", value: "血红蛋白116g/L，白细胞7.9×10⁹/L，血钾4.0mmol/L。", evidence: [{ source_record_id: "omfs-16-lab", quote: "血红蛋白116g/L，白细胞7.9×10⁹/L，血钾4.0mmol/L" }] },
-        { key: "pending_results", value: "原发灶补充免疫组化及左颈淋巴结分区结果未回。", evidence: [{ source_record_id: "omfs-16-pending", quote: "原发灶补充免疫组化及左颈淋巴结分区结果未回" }] },
-        { key: "attention", value: "夜班关注口底及颈部创面、误吸风险和进食耐受。", evidence: [{ source_record_id: "omfs-16-note", quote: "夜班关注口底及颈部创面、误吸风险和进食耐受" }] },
-        { key: "next_tasks", value: "晨间复核血糖并记录功能训练完成情况。", evidence: [{ source_record_id: "omfs-16-note", quote: "晨间复核血糖并记录功能训练完成情况" }] },
+        { key: "attention", value: "建议夜班关注呼吸情况、皮瓣色泽、口底及颈部创面变化，并观察进食耐受。", evidence: [{ source_record_id: "omfs-16-progress", quote: "气管套管已拔除，呼吸平稳。皮瓣色泽正常，口底及颈部创面恢复中" }] },
       ],
     },
   ),
@@ -592,17 +663,41 @@ const encounters: DemoEncounter[] = [
       { id: "omfs-21-treatment", type: "order", label: "今日医嘱", recordedAt: "2026-08-29T11:15:00+08:00", content: "继续口腔护理，软食；碘仿纱条今日部分退出约1cm，记录创面情况。" },
       { id: "omfs-21-lab", type: "lab", label: "今日检验", recordedAt: "2026-08-29T14:06:00+08:00", content: "白细胞7.8×10⁹/L，CRP 9mg/L。" },
       { id: "omfs-21-pending", type: "lab", label: "病理状态", recordedAt: "2026-08-29T16:16:00+08:00", content: "左上颌骨囊壁常规病理结果尚未回报。" },
-      { id: "omfs-21-note", type: "handoff_note", label: "交班备注", recordedAt: "2026-08-29T17:48:00+08:00", content: "夜班观察口内创面出血、鼻腔溢液及纱条位置；明日换药时继续评估纱条退出长度。" },
     ],
     {
       fields: [
         { key: "current_condition", value: "术后第3日，左面中部肿胀明显减轻，无发热及鼻腔溢液，口内创面清洁。", evidence: [{ source_record_id: "omfs-21-progress", quote: "术后第3日，左面中部肿胀较前明显减轻，无发热及鼻腔溢液，口内创面清洁" }] },
-        { key: "shift_changes", value: "碘仿纱条今日部分退出约1cm。", evidence: [{ source_record_id: "omfs-21-treatment", quote: "碘仿纱条今日部分退出约1cm" }] },
-        { key: "current_treatment", value: "继续口腔护理、软食，记录创面情况。", evidence: [{ source_record_id: "omfs-21-treatment", quote: "继续口腔护理，软食" }, { source_record_id: "omfs-21-treatment", quote: "记录创面情况" }] },
-        { key: "returned_results", value: "白细胞7.8×10⁹/L，CRP 9mg/L。", evidence: [{ source_record_id: "omfs-21-lab", quote: "白细胞7.8×10⁹/L，CRP 9mg/L" }] },
-        { key: "pending_results", value: "左上颌骨囊壁常规病理结果尚未回报。", evidence: [{ source_record_id: "omfs-21-pending", quote: "左上颌骨囊壁常规病理结果尚未回报" }] },
-        { key: "attention", value: "夜班观察口内创面出血、鼻腔溢液及纱条位置。", evidence: [{ source_record_id: "omfs-21-note", quote: "夜班观察口内创面出血、鼻腔溢液及纱条位置" }] },
-        { key: "next_tasks", value: "明日换药时继续评估纱条退出长度。", evidence: [{ source_record_id: "omfs-21-note", quote: "明日换药时继续评估纱条退出长度" }] },
+        { key: "attention", value: "建议夜班关注口内创面有无出血、鼻腔溢液以及面部肿胀变化。", evidence: [{ source_record_id: "omfs-21-progress", quote: "左面中部肿胀较前明显减轻，无发热及鼻腔溢液，口内创面清洁，无活动性出血" }] },
+      ],
+    },
+  ),
+  makeEncounter(
+    cases[5],
+    [
+      { id: "omfs-05-progress", type: "progress_note", label: "首次病程记录", recordedAt: "2026-08-29T17:10:00+08:00", content: "今日新入院，右颌下区触及约2.5cm×2.0cm肿物，质中、边界尚清、活动度可，无明显压痛。" },
+      { id: "omfs-05-order", type: "order", label: "今日医嘱", recordedAt: "2026-08-29T17:28:00+08:00", content: "完善颌面颈部增强CT及颌下区超声；必要时行细针穿刺检查。" },
+      { id: "omfs-05-lab", type: "lab", label: "入院检验", recordedAt: "2026-08-29T17:36:00+08:00", content: "入院血常规及凝血功能未见明显异常。" },
+      { id: "omfs-05-pending", type: "exam", label: "检查状态", recordedAt: "2026-08-29T18:02:00+08:00", content: "颌面颈部增强CT及颌下区超声已申请，状态：待检查。" },
+    ],
+    {
+      fields: [
+        { key: "current_condition", value: "今日新入院，右颌下区肿物无明显压痛，一般情况可。", evidence: [{ source_record_id: "omfs-05-progress", quote: "今日新入院，右颌下区触及约2.5cm×2.0cm肿物，质中、边界尚清、活动度可，无明显压痛" }] },
+        { key: "attention", value: "建议夜班关注右颌下区肿物疼痛、肿胀及局部变化。", evidence: [{ source_record_id: "omfs-05-progress", quote: "右颌下区触及约2.5cm×2.0cm肿物，质中、边界尚清、活动度可，无明显压痛" }] },
+      ],
+    },
+  ),
+  makeEncounter(
+    cases[6],
+    [
+      { id: "omfs-09-progress", type: "progress_note", label: "首次病程记录", recordedAt: "2026-08-29T17:46:00+08:00", content: "今日新入院，左颊黏膜见约2.8cm×1.8cm不规则白色斑块，前缘见浅表溃疡，无活动性出血。" },
+      { id: "omfs-09-order", type: "order", label: "今日医嘱", recordedAt: "2026-08-29T18:00:00+08:00", content: "完善术前评估；计划行左颊黏膜病变局部活检，标本送常规病理。" },
+      { id: "omfs-09-lab", type: "lab", label: "入院检验", recordedAt: "2026-08-29T18:08:00+08:00", content: "入院血常规、肝肾功能及凝血功能未见明显异常。" },
+      { id: "omfs-09-pending", type: "lab", label: "病理状态", recordedAt: "2026-08-29T18:20:00+08:00", content: "左颊黏膜病变尚未取材，病理结果待回。" },
+    ],
+    {
+      fields: [
+        { key: "current_condition", value: "今日新入院，左颊黏膜白色斑块伴浅表溃疡，无活动性出血。", evidence: [{ source_record_id: "omfs-09-progress", quote: "今日新入院，左颊黏膜见约2.8cm×1.8cm不规则白色斑块，前缘见浅表溃疡，无活动性出血" }] },
+        { key: "attention", value: "建议夜班关注左颊黏膜溃疡疼痛及有无出血。", evidence: [{ source_record_id: "omfs-09-progress", quote: "左颊黏膜见约2.8cm×1.8cm不规则白色斑块，前缘见浅表溃疡，无活动性出血" }] },
       ],
     },
   ),

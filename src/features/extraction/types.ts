@@ -1,19 +1,13 @@
 export type ExtractionFieldKey =
   | "current_condition"
-  | "shift_changes"
-  | "current_treatment"
-  | "returned_results"
-  | "pending_results"
-  | "attention"
-  | "next_tasks";
+  | "attention";
 
 export type SourceRecordType =
   | "patient_master"
   | "progress_note"
   | "order"
   | "lab"
-  | "exam"
-  | "handoff_note";
+  | "exam";
 
 export interface SourceSystemPatient {
   id: string;

@@ -1,4 +1,9 @@
-import type { AppErrorPayload, ExtractionResult } from "../types";
+import type {
+  AppErrorPayload,
+  ExtractionResult,
+  ExtractionSourceRecord,
+  SourceSystemChart,
+} from "../types";
 
 class ExtractionApiError extends Error {
   constructor(payload: AppErrorPayload["error"]) {
@@ -7,14 +12,40 @@ class ExtractionApiError extends Error {
   }
 }
 
-export async function generateHandoffCard(patientId: string) {
+function extractionRecords(chart: SourceSystemChart): ExtractionSourceRecord[] {
+  const documentRecords = chart.documents
+    .filter(
+      (document) =>
+        document.status !== "not_started" && document.content.trim().length > 0,
+    )
+    .map((document) => ({
+      id: `document-${document.key}`,
+      type: "progress_note" as const,
+      label: document.title,
+      recordedAt: document.recordedAt ?? chart.patient.updatedAt,
+      content: document.content.trim(),
+    }));
+  const documentLabels = new Set(
+    documentRecords.map((record) => record.label.trim()),
+  );
+  const clinicianAuthoredRecords = chart.records.filter(
+    (record) =>
+      record.type === "progress_note" &&
+      !documentLabels.has(record.label.trim()),
+  );
+  return [...clinicianAuthoredRecords, ...documentRecords];
+}
+
+export async function generateHandoffCard(chart: SourceSystemChart) {
   const response = await fetch("/api/extractions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      patientId,
-      templateId: "general_ward",
+      patientId: chart.patient.id,
+      templateId: "omfs_handoff_v1",
       sourceMode: "hospital_simulator",
+      patient: chart.patient,
+      sourceRecords: extractionRecords(chart),
     }),
   });
   const payload = (await response.json()) as
