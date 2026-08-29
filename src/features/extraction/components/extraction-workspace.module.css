@@ -1621,6 +1621,18 @@
   width: 15px;
 }
 
+.reviewFooter button.undoReviewButton {
+  color: #845000;
+  background: #fff4dc;
+  border: 1px solid #e6b24e;
+}
+
+.reviewFooter button.undoReviewButton:hover {
+  color: #6e4200;
+  background: #ffebc3;
+  border-color: #d49b2d;
+}
+
 .sourceDrawer {
   position: fixed;
   z-index: 50;
@@ -2239,6 +2251,31 @@
   width: 14px;
 }
 
+.resetHandoffButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  color: #a53a32;
+  font-size: 9px;
+  font-weight: 800;
+  background: #fff;
+  border: 1px solid #e6b7b3;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.resetHandoffButton:hover {
+  color: #8e2f28;
+  background: #fff5f4;
+  border-color: #d98f89;
+}
+
+.resetHandoffButton svg {
+  width: 14px;
+}
+
 .handoffCardStatuses {
   display: flex;
   flex-wrap: wrap;
@@ -2836,6 +2873,113 @@
 }
 
 .printGuardFooter button svg {
+  width: 15px;
+}
+
+.resetHandoffDialog {
+  width: min(580px, 100%);
+}
+
+.resetHandoffDialog > header {
+  border-top: 4px solid #c84a40;
+}
+
+.resetHandoffDialog header small {
+  color: #b23d35;
+}
+
+.resetHandoffBody {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 16px;
+  padding: 24px;
+}
+
+.resetHandoffBody > div {
+  min-width: 0;
+}
+
+.resetHandoffIcon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  color: #a93831;
+  background: #fff0ee;
+  border: 1px solid #e9b4af;
+  border-radius: 8px;
+}
+
+.resetHandoffIcon svg {
+  width: 25px;
+}
+
+.resetHandoffBody strong {
+  color: #263245;
+  font-size: 18px;
+}
+
+.resetHandoffBody p {
+  margin: 8px 0 14px;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.resetSafetyNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  color: #167657;
+  font-size: 9px;
+  font-weight: 750;
+  background: #edf8f4;
+  border: 1px solid #b5dece;
+  border-radius: 4px;
+}
+
+.resetSafetyNote svg {
+  width: 14px;
+}
+
+.resetHandoffFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 16px 24px 20px;
+  background: #f8faff;
+  border-top: 1px solid var(--line);
+}
+
+.resetHandoffFooter button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 14px;
+  color: #566176;
+  font-size: 10px;
+  font-weight: 800;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.resetHandoffFooter button:last-child {
+  color: #fff;
+  background: #b63f36;
+  border-color: #b63f36;
+}
+
+.resetHandoffFooter button:last-child:hover {
+  background: #982f28;
+  border-color: #982f28;
+}
+
+.resetHandoffFooter button svg {
   width: 15px;
 }
 

@@ -48,9 +48,11 @@ type WorkspaceExperience = "emr" | "handoff";
 // instructions inside the electronic medical record. Handoff suggestions now
 // exist only in the handoff workspace after AI generation.
 const CHARTS_STORAGE_KEY = "on-time-handoff:charts:v2";
-const HANDOFFS_STORAGE_KEY = "on-time-handoff:handoffs:v2";
-const CHANGED_PATIENTS_STORAGE_KEY = "on-time-handoff:changed-patients:v2";
-const CHANGED_SOURCES_STORAGE_KEY = "on-time-handoff:changed-sources:v2";
+// v4 intentionally starts a fresh handoff shift while preserving EMR charts,
+// so the three-patient demo can be imported and reviewed again from scratch.
+const HANDOFFS_STORAGE_KEY = "on-time-handoff:handoffs:v4";
+const CHANGED_PATIENTS_STORAGE_KEY = "on-time-handoff:changed-patients:v4";
+const CHANGED_SOURCES_STORAGE_KEY = "on-time-handoff:changed-sources:v4";
 // One-time cleanup for an accidental patient created during local UI testing.
 // Matching both bed number and name avoids touching legitimate user-created data.
 const LEGACY_QA_PATIENT_SIGNATURES = new Set(["50|傻小姐"]);
@@ -235,6 +237,7 @@ export function ExtractionWorkspace({
   >({});
   const [isAddingPatient, setIsAddingPatient] = useState(false);
   const [isPrintGuardOpen, setIsPrintGuardOpen] = useState(false);
+  const [isResetHandoffOpen, setIsResetHandoffOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [activeEvidence, setActiveEvidence] = useState<{
     patientId: string;
@@ -924,6 +927,35 @@ export function ExtractionWorkspace({
     setNotice("该患者交班内容已核对。全部患者核对后可统一打印。");
   }
 
+  function undoHandoffReview(patientId: string) {
+    setHandoffs((current) => ({
+      ...current,
+      [patientId]: { ...current[patientId], reviewed: false },
+    }));
+    setNotice("已撤销该患者的核对状态，医生修改内容仍然保留。");
+  }
+
+  function resetHandoffImport() {
+    window.localStorage.setItem(HANDOFFS_STORAGE_KEY, JSON.stringify({}));
+    window.localStorage.setItem(
+      CHANGED_PATIENTS_STORAGE_KEY,
+      JSON.stringify([]),
+    );
+    window.localStorage.setItem(
+      CHANGED_SOURCES_STORAGE_KEY,
+      JSON.stringify({}),
+    );
+    setHandoffs({});
+    setChangedPatientIds([]);
+    setChangedSourceRecordIds({});
+    setSelectedHandoffId(null);
+    setActiveEvidence(null);
+    setIsPrintGuardOpen(false);
+    setIsResetHandoffOpen(false);
+    window.history.replaceState(null, "", "/handoff");
+    setNotice("已撤销本次交班导入，电子病历及患者资料未受影响。");
+  }
+
   function requestUnifiedPrint() {
     if (totalHandoffCount === 0) return;
     if (reviewedCount !== totalHandoffCount) {
@@ -1081,6 +1113,7 @@ export function ExtractionWorkspace({
                 isReady={isHydrated}
                 changedPatientIds={changedPatientIds}
                 onPrint={requestUnifiedPrint}
+                onReset={() => setIsResetHandoffOpen(true)}
               />
             )}
 
@@ -1104,6 +1137,7 @@ export function ExtractionWorkspace({
                 isRefreshing={refreshingPatientId === selectedHandoffId}
                 hasSourceChanges={changedPatientIds.includes(selectedHandoffId)}
                 onReview={() => reviewHandoff(selectedHandoffId)}
+                onUndoReview={() => undoHandoffReview(selectedHandoffId)}
                 reviewedCount={reviewedCount}
                 totalCount={totalHandoffCount}
                 onPrint={requestUnifiedPrint}
@@ -1166,6 +1200,15 @@ export function ExtractionWorkspace({
               setIsPrintGuardOpen(false);
               setSelectedHandoffId(null);
             }}
+          />
+        )}
+
+        {!isEmr && isResetHandoffOpen && (
+          <ResetHandoffDialog
+            reviewedCount={reviewedCount}
+            totalCount={totalHandoffCount}
+            onClose={() => setIsResetHandoffOpen(false)}
+            onConfirm={resetHandoffImport}
           />
         )}
 
@@ -1448,6 +1491,72 @@ function PrintReviewGuardDialog({
           <button type="button" onClick={onClose}>暂不打印</button>
           <button type="button" autoFocus onClick={onContinueReview}>
             <ClipboardList /> 查看待核对患者
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
+function ResetHandoffDialog({
+  reviewedCount,
+  totalCount,
+  onClose,
+  onConfirm,
+}: {
+  reviewedCount: number;
+  totalCount: number;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div className={styles.dialogBackdrop} onMouseDown={onClose}>
+      <section
+        className={`${styles.patientDialog} ${styles.resetHandoffDialog}`}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="reset-handoff-title"
+        aria-describedby="reset-handoff-description"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header>
+          <span>
+            <small>UNDO IMPORT</small>
+            <strong id="reset-handoff-title">撤销本次交班导入？</strong>
+            <p id="reset-handoff-description">
+              本轮交班草稿、医生补充和核对结果将被清空，操作后回到尚未导入状态。
+            </p>
+          </span>
+          <button type="button" aria-label="关闭撤销导入提示" onClick={onClose}>
+            <X />
+          </button>
+        </header>
+        <div className={styles.resetHandoffBody}>
+          <span className={styles.resetHandoffIcon} aria-hidden="true">
+            <Trash2 />
+          </span>
+          <div>
+            <strong>将清空 {totalCount} 位患者的本轮交班</strong>
+            <p>
+              其中 {reviewedCount} 位已核对。电子病历、患者资料和医生书写的病史不会被删除或修改。
+            </p>
+            <span className={styles.resetSafetyNote}>
+              <ShieldCheck /> 仅撤销交班系统中的本次导入
+            </span>
+          </div>
+        </div>
+        <footer className={styles.resetHandoffFooter}>
+          <button type="button" autoFocus onClick={onClose}>继续保留</button>
+          <button type="button" onClick={onConfirm}>
+            <Trash2 /> 确认撤销本次导入
           </button>
         </footer>
       </section>
@@ -1763,6 +1872,7 @@ function HandoffBoard({
   isReady,
   changedPatientIds,
   onPrint,
+  onReset,
 }: {
   charts: SourceSystemChart[];
   handoffs: Record<string, HandoffEditorState>;
@@ -1776,6 +1886,7 @@ function HandoffBoard({
   isReady: boolean;
   changedPatientIds: string[];
   onPrint: () => void;
+  onReset: () => void;
 }) {
   const hasHandoffs = Object.keys(handoffs).length > 0;
   const importStarted = useRef(false);
@@ -1794,9 +1905,18 @@ function HandoffBoard({
         description="按入院概况、最新病程和必要的术前记录整理目前病情；AI 只提出本夜观察重点。"
       >
         {hasHandoffs && (
-          <span className={styles.savedHandoffNotice}>
-            <ShieldCheck /> 已保留本次交班草稿
-          </span>
+          <>
+            <span className={styles.savedHandoffNotice}>
+              <ShieldCheck /> 已保留本次交班草稿
+            </span>
+            <button
+              type="button"
+              className={styles.resetHandoffButton}
+              onClick={onReset}
+            >
+              <Trash2 /> 撤销本次导入
+            </button>
+          </>
         )}
         <button
           type="button"
@@ -1914,6 +2034,7 @@ function HandoffEditor({
   isRefreshing,
   hasSourceChanges,
   onReview,
+  onUndoReview,
   reviewedCount,
   totalCount,
   onPrint,
@@ -1932,6 +2053,7 @@ function HandoffEditor({
   isRefreshing: boolean;
   hasSourceChanges: boolean;
   onReview: () => void;
+  onUndoReview: () => void;
   reviewedCount: number;
   totalCount: number;
   onPrint: () => void;
@@ -2123,8 +2245,13 @@ function HandoffEditor({
           </div>
           <footer className={styles.reviewFooter}>
             <span><ShieldCheck /> 目前病情来自分层原文摘录；注意事项仅限本夜观察，必须由医生核对。</span>
-            <button type="button" onClick={onReview}>
-              <CheckCircle2 /> {editor.reviewed ? "已确认无误" : "确认该患者交班"}
+            <button
+              type="button"
+              className={editor.reviewed ? styles.undoReviewButton : undefined}
+              onClick={editor.reviewed ? onUndoReview : onReview}
+            >
+              {editor.reviewed ? <PenLine /> : <CheckCircle2 />}
+              {editor.reviewed ? "撤销核对" : "确认该患者交班"}
             </button>
           </footer>
         </section>
