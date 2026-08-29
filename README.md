@@ -92,44 +92,6 @@ MVP 保留三位处于不同病程阶段的虚构患者，方便在三分钟内�
 
 病历时间线支持持续追加文书，并不限制为固定篇数；尚未书写的文书会保留科室模板框架。
 
-## 三分钟演示路径
-
-1. 在电子病历首页展示三位不同阶段的患者。
-2. 进入患者病历，展示动态病历时间线和待填写文书框架。
-3. 返回列表，点击“一键导入交班”。
-4. 打开一位患者，说明“目前病情”与“AI 夜班观察建议”的区别。
-5. 查看原文依据、修改内容并确认患者交班。
-6. 展示未全部核对时的打印拦截，以及全部核对后的连续打印。
-7. 演示“撤销核对”或“撤销本次导入”，说明电子病历不会受到影响。
-
-## 本地运行
-
-环境要求：Node.js 20+。
-
-```bash
-npm install
-cp .env.example .env.local
-npm run dev -- --port 3210
-```
-
-打开：
-
-- 电子病历演示：[http://localhost:3210](http://localhost:3210)
-- 准点交班助手：[http://localhost:3210/handoff](http://localhost:3210/handoff)
-
-### DeepSeek 配置
-
-DeepSeek 是可选项。没有配置密钥时，项目会使用明确标注的虚构演示结果，便于本地体验完整流程。
-
-```bash
-DEEPSEEK_API_KEY=your_api_key
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-v4-flash
-DEEPSEEK_TIMEOUT_MS=35000
-```
-
-密钥仅在服务端读取。真实医疗数据不得在未经医院安全、隐私和合规评估的情况下发送至公网模型。
-
 ## 技术实现
 
 - Next.js 16 + React 19 + TypeScript
